@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject } from "rxjs";
+import { Observable, ReplaySubject, Subject } from "rxjs";
 export type StoreKey<T> = { key: any };
 
 type StoreValue<T> = {
@@ -20,28 +20,40 @@ export type Store = ReadonlyStore & {
   del<T>(key: StoreKey<T>): Store;
 };
 
-export type StoreKeyValue<T> = {
+export type StoreUpdateAction = "set" | "del";
+
+export type StoreUpdate<T> = {
   key: StoreKey<T>;
-  value: T;
+  action: StoreUpdateAction;
 };
 
+export type SetUpdate<T> = StoreUpdate<T> & { value: T; action: "set" };
+
+export type DelUpdate<T> = StoreUpdate<T> & { action: "del" };
+
+export function isStoreUpdateSet<T>(
+  update: StoreUpdate<T>
+): update is SetUpdate<T> {
+  return update.action === "set";
+}
+
 class StoreValueImpl<T> implements StoreValue<T> {
-  private readonly subject = new ReplaySubject<T>(1);
+  private readonly updates$ = new ReplaySubject<T>(1);
   private value: T | undefined = undefined;
 
   get = (): T | undefined => this.value;
 
-  get$ = (): Observable<T> => this.subject.asObservable();
+  get$ = (): Observable<T> => this.updates$.asObservable();
 
   set(value: T): StoreValue<T> {
     this.value = value;
-    this.subject.next(value);
+    this.updates$.next(value);
     return this;
   }
 
   del(): void {
     this.value = undefined;
-    this.subject.complete();
+    this.updates$.complete();
   }
 }
 
@@ -76,16 +88,22 @@ class StoreImpl implements Store {
     return this;
   }
 }
+
 export module Store {
   export const create = () => new StoreImpl();
 
   export const key = <T>(key: any): StoreKey<T> => ({ key });
 
-  export const keyValue = <T>(
+  export const update = <T>(
     key: StoreKey<T>,
-    value: T
-  ): StoreKeyValue<T> => ({
-    key,
-    value,
-  });
+    value?: T,
+    action: StoreUpdateAction = "set"
+  ): StoreUpdate<T> =>
+    action === "set"
+      ? ({
+          key,
+          value,
+          action,
+        } as SetUpdate<T>)
+      : ({ key, action } as DelUpdate<T>);
 }

@@ -1,6 +1,12 @@
 import { Action } from "../action";
 import { Dispatcher } from "../dispatcher";
-import { ReadonlyStore, Store, StoreKey, StoreKeyValue } from "../store";
+import {
+  ReadonlyStore,
+  Store,
+  StoreKey,
+  StoreUpdate,
+  SetUpdate,
+} from "../store";
 import { nanoid } from "nanoid";
 import { todoPropsFactory } from "./props";
 
@@ -18,7 +24,7 @@ store.set(todoText, "");
 store.set(todoList, []);
 
 export module Actions {
-  export const set = Action.type<StoreKeyValue<any>>("set");
+  export const set = Action.type<StoreUpdate<any>>("set");
   export const addTodoText = Action.type("addTodoText");
   export const checkTodoItem = Action.type<TodoItem>("completeTodoItem");
   export const delTodoItem = Action.type<TodoItem>("delTodoItem");
@@ -26,17 +32,17 @@ export module Actions {
 
 export const set = <T>(key: StoreKey<T>, value: T) => ({
   type: Actions.set,
-  payload: Store.keyValue(key, value),
+  payload: Store.update(key, value),
 });
 
-const setHandler = (action: Action<StoreKeyValue<any>>): StoreKeyValue<any> =>
-  Store.keyValue(action.payload.key, action.payload.value);
+const setHandler = (action: Action<SetUpdate<any>>): StoreUpdate<any> =>
+  Store.update(action.payload.key, action.payload.value);
 
 const addTodoTextHandler =
   (store: ReadonlyStore) =>
-  (action: Action<any>): StoreKeyValue<any>[] =>
+  (action: Action<any>): StoreUpdate<any>[] =>
     [
-      Store.keyValue(todoList, [
+      Store.update(todoList, [
         ...store.getOrElse(todoList, []),
         {
           key: nanoid(),
@@ -44,12 +50,12 @@ const addTodoTextHandler =
           completed: false,
         },
       ]),
-      Store.keyValue(todoText, ""),
+      Store.update(todoText, ""),
     ];
 
 const completeTodoListHandler =
   (store: ReadonlyStore) => (action: Action<TodoItem>) =>
-    Store.keyValue(
+    Store.update(
       todoList,
       store
         .getOrElse(todoList, [])
@@ -62,20 +68,24 @@ const completeTodoListHandler =
 
 const delTodoItemHandler =
   (store: ReadonlyStore) => (action: Action<TodoItem>) =>
-    Store.keyValue(
+    Store.update(
       todoList,
       store.getOrElse(todoList, []).filter((i) => i.key !== action.payload.key)
     );
 
-export const [dispatcher, updates$] = Dispatcher.create(store)([
+export const [dispatcher, actions$, updates$] = Dispatcher.create(store)([
   [Actions.set, setHandler],
   [Actions.addTodoText, addTodoTextHandler(store)],
   [Actions.checkTodoItem, completeTodoListHandler(store)],
   [Actions.delTodoItem, delTodoItemHandler(store)],
 ]);
 
-updates$.subscribe((updates) => {
-  console.log("updates", updates);
-});
+actions$.subscribe((action) =>
+  console.log(`action: ${JSON.stringify(action)}`)
+);
+
+updates$.subscribe((updates) =>
+  console.log(`updates: ${JSON.stringify(updates)}`)
+);
 
 export const createTodoProps = todoPropsFactory(store, dispatcher);
