@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 import { StoreUpdate } from "./store";
 
-export type ActionType<T> = { type: any };
+export type ActionType<T> = { type: string };
 
 export type Action<T> = {
   type: ActionType<T>;
@@ -14,7 +14,8 @@ export type ActionHandler<T> = (
   | StoreUpdate<any>
   | StoreUpdate<any>[]
   | Promise<StoreUpdate<any> | StoreUpdate<any>[]>
-  | Observable<StoreUpdate<any> | StoreUpdate<any>[]>;
+  | Observable<StoreUpdate<any> | StoreUpdate<any>[]>
+  | undefined;
 
 export module Action {
   export const type = <T>(type: any): ActionType<T> => ({ type });

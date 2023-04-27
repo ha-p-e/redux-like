@@ -1,5 +1,5 @@
-import { Observable, Subject, from, map, of } from "rxjs";
-import { Store, StoreUpdate, isStoreUpdateSet } from "./store";
+import { EMPTY, Observable, Subject, from, map, of } from "rxjs";
+import { Store, StoreUpdate, isSetUpdate } from "./store";
 import { Action, ActionHandler, ActionType } from "./action";
 
 export type Dispatcher<T = any> = (action: Action<T>) => void;
@@ -11,6 +11,7 @@ export module Dispatcher {
       | StoreUpdate<any>[]
       | Promise<StoreUpdate<any> | StoreUpdate<any>[]>
       | Observable<StoreUpdate<any> | StoreUpdate<any>[]>
+      | undefined
   ): Observable<StoreUpdate<any>[]> => {
     if (update instanceof Observable) {
       return update.pipe(map((x) => (Array.isArray(x) ? x : [x])));
@@ -21,49 +22,54 @@ export module Dispatcher {
     if (Array.isArray(update)) {
       return of(update);
     }
-    return of([update]);
+    if (update) {
+      return of([update]);
+    }
+    return EMPTY;
   };
 
-  // todo improve error handling
   export const create =
     <T = any>(store: Store) =>
     (
       handlers: [ActionType<T>, ActionHandler<T>][]
     ): [
       (action: Action<T>) => void,
-      Observable<Action<T>>,
-      Observable<StoreUpdate<any>[]>
+      Observable<Action<T> | StoreUpdate<any>[] | Error>
     ] => {
-      const actionsDispatched$ = new Subject<Action<T>>();
-      const storeUpdates$ = new Subject<StoreUpdate<any>[]>();
+      const updates$ = new Subject<Action<T> | StoreUpdate<any>[] | Error>();
       const dispatcher: Dispatcher<T> = (action: Action<T>) => {
-        actionsDispatched$.next(action);
-        const actionHandlersMap = new Map<ActionType<T>, ActionHandler<T>>(
-          handlers
+        updates$.next(action);
+        const actionHandlersMap = new Map<string, ActionHandler<T>>(
+          handlers.map(([k, v]) => [k.type, v])
         );
-        const handler = actionHandlersMap.get(action.type);
+        const handler = actionHandlersMap.get(action.type.type);
         if (handler) {
-          const result = handler(action);
-          toObservableUpdate(result).subscribe({
-            next: (updates) => {
-              updates.forEach((update) => {
-                if (isStoreUpdateSet(update))
-                  store.set(update.key, update.value);
-                else store.del(update.key);
-              });
-              storeUpdates$.next(updates);
-            },
-            error: (e) => storeUpdates$.error(e),
-            // do not complete subject
-          });
+          try {
+            const result = handler(action);
+            toObservableUpdate(result).subscribe({
+              next: (updates) => {
+                updates.forEach((update) => {
+                  if (isSetUpdate(update)) store.set(update.key, update.value);
+                  else store.del(update.key);
+                });
+                updates$.next(updates);
+              },
+              error: (e: Error) => updates$.next(e),
+              // do not complete subject
+            });
+          } catch (e) {
+            e instanceof Error
+              ? updates$.next(e)
+              : updates$.next(new Error(String(e)));
+          }
         } else {
-          storeUpdates$.error(`Action handler for '${action}' not found`);
+          updates$.next(
+            new Error(
+              `Action handler for '${JSON.stringify(action)}' not found`
+            )
+          );
         }
       };
-      return [
-        dispatcher,
-        actionsDispatched$.asObservable(),
-        storeUpdates$.asObservable(),
-      ];
+      return [dispatcher, updates$.asObservable()];
     };
 }

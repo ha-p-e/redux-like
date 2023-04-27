@@ -19,7 +19,7 @@ const TodoItem = (props: TodoItemProps) => (
     <input
       type="checkbox"
       checked={props.item.completed}
-      onChange={() => props.check()}
+      onChange={() => props.completed()}
     />
     <span
       style={{
@@ -34,11 +34,11 @@ const TodoItem = (props: TodoItemProps) => (
 
 const TodoList = (props: TodoListProps) => (
   <div>
-    {props.todoList.map((item) => (
+    {props.todoList.map((key) => (
       <Connect<TodoItemProps>
-        key={item.key}
+        key={key}
         component={TodoItem}
-        props={props.createTodoItemProps(item)}
+        props={props.createTodoItemProps(key)}
       />
     ))}
   </div>

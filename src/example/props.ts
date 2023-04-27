@@ -1,8 +1,9 @@
-import { map, Observable, of } from "rxjs";
-import { Actions, set, TodoItem, todoList, todoText } from "./module";
+import { map, Observable, tap } from "rxjs";
+import { Keys, TodoItem } from "./module";
 import { Dispatcher } from "../dispatcher";
 import { ReadonlyStore } from "../store";
 import { Action } from "../action";
+import { Actions, set } from "./actions";
 
 export interface AddTodoProps {
   addTodoText: string;
@@ -13,13 +14,13 @@ export interface AddTodoProps {
 export interface TodoItemProps {
   item: TodoItem;
   delete: () => void;
-  check: () => void;
+  completed: () => void;
 }
 
 export interface TodoListProps {
-  todoList: TodoItem[];
-  setTodoList: (list: TodoItem[]) => void;
-  createTodoItemProps: (item: TodoItem) => Observable<TodoItemProps>;
+  todoList: string[];
+  setTodoList: (list: string[]) => void;
+  createTodoItemProps: (item: string) => Observable<TodoItemProps>;
 }
 
 export interface TodoProps {
@@ -32,26 +33,29 @@ export const todoPropsFactory = (
   dispatch: Dispatcher
 ) => {
   const createAddTodoProps = (): Observable<AddTodoProps> =>
-    store.get$(todoText).pipe(
+    store.get$(Keys.todoText).pipe(
       map((addTodoText) => ({
         addTodoText,
-        setAddTodoText: (text: string) => dispatch(set(todoText, text)),
-        addTodo: () => dispatch(Action.create(Actions.addTodoText, null)),
+        setAddTodoText: (text: string) => dispatch(set(Keys.todoText, text)),
+        addTodo: () => dispatch(Action.create(Actions.addTodoItem)),
       }))
     );
 
-  const createTodoItemProps = (item: TodoItem): Observable<TodoItemProps> =>
-    of({
-      item: item,
-      delete: () => dispatch(Action.create(Actions.delTodoItem, item)),
-      check: () => dispatch(Action.create(Actions.checkTodoItem, item)),
-    });
+  const createTodoItemProps = (key: string): Observable<TodoItemProps> =>
+    store.get$(Keys.todoItem(key)).pipe(
+      map((item) => ({
+        item,
+        delete: () => dispatch(Action.create(Actions.delTodoItem, item)),
+        completed: () =>
+          dispatch(Action.create(Actions.completeTodoItem, item)),
+      }))
+    );
 
   const createTodoListProps = (): Observable<TodoListProps> =>
-    store.get$(todoList).pipe(
+    store.get$(Keys.todoList).pipe(
       map((list) => ({
         todoList: list,
-        setTodoList: (list: TodoItem[]) => dispatch(set(todoList, list)),
+        setTodoList: (list: string[]) => dispatch(set(Keys.todoList, list)),
         createTodoItemProps,
       }))
     );

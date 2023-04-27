@@ -1,13 +1,13 @@
-import { Action } from "../action";
 import { Dispatcher } from "../dispatcher";
+import { Store } from "../store";
 import {
-  ReadonlyStore,
-  Store,
-  StoreKey,
-  StoreUpdate,
-  SetUpdate,
-} from "../store";
-import { nanoid } from "nanoid";
+  Actions,
+  addTodoItemHandler,
+  completeTodoListHandler,
+  delTodoItemHandler,
+  setHandler,
+} from "./actions";
+
 import { todoPropsFactory } from "./props";
 
 export interface TodoItem {
@@ -16,76 +16,29 @@ export interface TodoItem {
   completed: boolean;
 }
 
-export const store = Store.create();
-export const todoText = Store.key<string>("todoText");
-export const todoList = Store.key<TodoItem[]>("todoList");
-
-store.set(todoText, "");
-store.set(todoList, []);
-
-export module Actions {
-  export const set = Action.type<StoreUpdate<any>>("set");
-  export const addTodoText = Action.type("addTodoText");
-  export const checkTodoItem = Action.type<TodoItem>("completeTodoItem");
-  export const delTodoItem = Action.type<TodoItem>("delTodoItem");
+export module Keys {
+  export const todoText = Store.key<string>("todoText");
+  export const todoList = Store.key<string[]>("todoList");
+  export const todoItem = (key: string) =>
+    Store.key<TodoItem>(`todoItem/${key}`);
 }
 
-export const set = <T>(key: StoreKey<T>, value: T) => ({
-  type: Actions.set,
-  payload: Store.update(key, value),
-});
+export const store = Store.create();
+store.set(Keys.todoText, "");
+store.set(Keys.todoList, []);
 
-const setHandler = (action: Action<SetUpdate<any>>): StoreUpdate<any> =>
-  Store.update(action.payload.key, action.payload.value);
-
-const addTodoTextHandler =
-  (store: ReadonlyStore) =>
-  (action: Action<any>): StoreUpdate<any>[] =>
-    [
-      Store.update(todoList, [
-        ...store.getOrElse(todoList, []),
-        {
-          key: nanoid(),
-          description: store.getOrElse(todoText, ""),
-          completed: false,
-        },
-      ]),
-      Store.update(todoText, ""),
-    ];
-
-const completeTodoListHandler =
-  (store: ReadonlyStore) => (action: Action<TodoItem>) =>
-    Store.update(
-      todoList,
-      store
-        .getOrElse(todoList, [])
-        .map((i) =>
-          i.key === action.payload.key
-            ? { ...action.payload, completed: !action.payload.completed }
-            : i
-        )
-    );
-
-const delTodoItemHandler =
-  (store: ReadonlyStore) => (action: Action<TodoItem>) =>
-    Store.update(
-      todoList,
-      store.getOrElse(todoList, []).filter((i) => i.key !== action.payload.key)
-    );
-
-export const [dispatcher, actions$, updates$] = Dispatcher.create(store)([
+export const [dispatcher, updates$] = Dispatcher.create(store)([
   [Actions.set, setHandler],
-  [Actions.addTodoText, addTodoTextHandler(store)],
-  [Actions.checkTodoItem, completeTodoListHandler(store)],
+  [Actions.addTodoItem, addTodoItemHandler(store)],
+  [Actions.completeTodoItem, completeTodoListHandler(store)],
   [Actions.delTodoItem, delTodoItemHandler(store)],
 ]);
 
-actions$.subscribe((action) =>
-  console.log(`action: ${JSON.stringify(action)}`)
-);
-
-updates$.subscribe((updates) =>
-  console.log(`updates: ${JSON.stringify(updates)}`)
-);
+updates$.subscribe((update) => {
+  update instanceof Error
+    ? console.log(update)
+    : console.log(JSON.stringify(update));
+  console.log(store.snap());
+});
 
 export const createTodoProps = todoPropsFactory(store, dispatcher);
