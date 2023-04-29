@@ -10,7 +10,7 @@ import { Keys, TodoItem } from "./module";
 import { nanoid } from "nanoid";
 
 export module Actions {
-  export const set = Action.type<StoreUpdate<any>>("set");
+  export const set = Action.type<StoreUpdate>("set");
   export const addTodoItem = Action.type("addTodoItem");
   export const completeTodoItem = Action.type<TodoItem>("completeTodoItem");
   export const delTodoItem = Action.type<TodoItem>("delTodoItem");
@@ -21,12 +21,12 @@ export const set = <T>(key: StoreKey<T>, value: T) => ({
   payload: Store.set(key, value),
 });
 
-export const setHandler = (action: Action<SetUpdate<any>>): StoreUpdate<any> =>
+export const setHandler = (action: Action<SetUpdate<any>>): StoreUpdate =>
   Store.set(action.payload.key, action.payload.value);
 
 export const addTodoItemHandler =
   (store: ReadonlyStore) =>
-  (_: Action<any>): StoreUpdate<any>[] => {
+  (_: Action<any>): StoreUpdate[] => {
     const key = nanoid();
     return [
       Store.set(Keys.todoItem(key), {

@@ -11,10 +11,10 @@ export type Action<T> = {
 export type ActionHandler<T> = (
   action: Action<T>
 ) =>
-  | StoreUpdate<any>
-  | StoreUpdate<any>[]
-  | Promise<StoreUpdate<any> | StoreUpdate<any>[]>
-  | Observable<StoreUpdate<any> | StoreUpdate<any>[]>
+  | StoreUpdate
+  | StoreUpdate[]
+  | Promise<StoreUpdate | StoreUpdate[]>
+  | Observable<StoreUpdate | StoreUpdate[]>
   | undefined;
 
 export module Action {

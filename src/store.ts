@@ -23,7 +23,7 @@ export type Store = ReadonlyStore & {
 
 export type StoreUpdateAction = "set" | "del";
 
-export type StoreUpdate<T> = {
+export type StoreUpdate<T = any> = {
   key: StoreKey<T>;
   action: StoreUpdateAction;
 };

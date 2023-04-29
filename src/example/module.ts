@@ -35,10 +35,12 @@ export const [dispatcher, updates$] = Dispatcher.create(store)([
 ]);
 
 updates$.subscribe((update) => {
-  update instanceof Error
-    ? console.log(update)
-    : console.log(JSON.stringify(update));
-  console.log(store.snap());
+  if (update instanceof Error) console.log(update);
+  else if ("type" in update) console.log(`action: ${JSON.stringify(update)}`);
+  else if (Array.isArray(update)) {
+    console.log(`update: ${JSON.stringify(update)}`);
+    console.log("store:", store.snap());
+  }
 });
 
 export const createTodoProps = todoPropsFactory(store, dispatcher);

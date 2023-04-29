@@ -7,12 +7,12 @@ export type Dispatcher<T = any> = (action: Action<T>) => void;
 export module Dispatcher {
   const toObservableUpdate = (
     update:
-      | StoreUpdate<any>
-      | StoreUpdate<any>[]
-      | Promise<StoreUpdate<any> | StoreUpdate<any>[]>
-      | Observable<StoreUpdate<any> | StoreUpdate<any>[]>
+      | StoreUpdate
+      | StoreUpdate[]
+      | Promise<StoreUpdate | StoreUpdate[]>
+      | Observable<StoreUpdate | StoreUpdate[]>
       | undefined
-  ): Observable<StoreUpdate<any>[]> => {
+  ): Observable<StoreUpdate[]> => {
     if (update instanceof Observable) {
       return update.pipe(map((x) => (Array.isArray(x) ? x : [x])));
     }
@@ -34,9 +34,9 @@ export module Dispatcher {
       handlers: [ActionType<T>, ActionHandler<T>][]
     ): [
       (action: Action<T>) => void,
-      Observable<Action<T> | StoreUpdate<any>[] | Error>
+      Observable<Action<T> | StoreUpdate[] | Error>
     ] => {
-      const updates$ = new Subject<Action<T> | StoreUpdate<any>[] | Error>();
+      const updates$ = new Subject<Action<T> | StoreUpdate[] | Error>();
       const dispatcher: Dispatcher<T> = (action: Action<T>) => {
         updates$.next(action);
         const actionHandlersMap = new Map<string, ActionHandler<T>>(
