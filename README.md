@@ -4,9 +4,18 @@ Experiment to explore a state management approach similar to Redux, that aims to
 
 ### Data Flow
 
-View -> Action -> [Dispatcher -> ActionHandler] -> Store -> View
+```mermaid
+graph LR
+  subgraph Dispatcher
+    ActionHandler(ActionHandler)
+  end
+  View(View) --> Action(Action)
+  Action --> Dispatcher
+  Dispatcher --> Store(Store)
+  Store --> View
+```
 
-The main idea is to remove or reduce the need for logic in components, middleware, reducers and selectors, and capture all behavior within pure TypeScript [`ActionHandler`](#actionhandler) functions that are easy to test and maintain.
+Although the Redux data flow looks similar, in practice there is often logic in components, middleware, reducers and selectors. The idea is to remove or reduce the need for logic in these areas and instead capture all behavior within pure TypeScript [`ActionHandler`](#actionhandler) functions that are easy to test and maintain.
 
 ### ActionHandler
 
@@ -56,3 +65,5 @@ function Connect<T>(props: { component: FC<T>; props: Observable<T> | T });
 ```
 
 It allows function components to access state through props easily, without the need for hooks. Hooks can often encourage code that couples state, logic, and effects with components, which reduces maintainability.
+
+Instead of typical prop drilling, child props are passed to through a parents as a prop creation function. This decouples parent components with changes to child props.
