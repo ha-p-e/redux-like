@@ -1,4 +1,4 @@
-import { map, Observable, tap } from "rxjs";
+import { map } from "rxjs";
 import { Keys, TodoItem } from "./module";
 import { Dispatcher } from "../dispatcher";
 import { ReadonlyStore } from "../store";
@@ -20,19 +20,10 @@ export interface TodoItemProps {
 export interface TodoListProps {
   todoList: string[];
   setTodoList: (list: string[]) => void;
-  createTodoItemProps: (item: string) => Observable<TodoItemProps>;
 }
 
-export interface TodoProps {
-  createAddTodoProps: () => Observable<AddTodoProps>;
-  createTodoListProps: () => Observable<TodoListProps>;
-}
-
-export const todoPropsFactory = (
-  store: ReadonlyStore,
-  dispatch: Dispatcher
-) => {
-  const createAddTodoProps = (): Observable<AddTodoProps> =>
+export const createAddTodoProps =
+  (store: ReadonlyStore, dispatch: Dispatcher) => () =>
     store.get$(Keys.todoText).pipe(
       map((addTodoText) => ({
         addTodoText,
@@ -41,8 +32,10 @@ export const todoPropsFactory = (
       }))
     );
 
-  const createTodoItemProps = (key: string): Observable<TodoItemProps> =>
-    store.get$(Keys.todoItem(key)).pipe(
+export const createTodoItemProps =
+  (store: ReadonlyStore, dispatch: Dispatcher) =>
+  (props: { todoKey: string }) =>
+    store.get$(Keys.todoItem(props.todoKey)).pipe(
       map((item) => ({
         item,
         delete: () => dispatch(Action.create(Actions.delTodoItem, item)),
@@ -51,17 +44,11 @@ export const todoPropsFactory = (
       }))
     );
 
-  const createTodoListProps = (): Observable<TodoListProps> =>
+export const createTodoListProps =
+  (store: ReadonlyStore, dispatch: Dispatcher) => () =>
     store.get$(Keys.todoList).pipe(
       map((list) => ({
         todoList: list,
         setTodoList: (list: string[]) => dispatch(set(Keys.todoList, list)),
-        createTodoItemProps,
       }))
     );
-
-  return (): TodoProps => ({
-    createAddTodoProps,
-    createTodoListProps,
-  });
-};

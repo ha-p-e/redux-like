@@ -7,8 +7,7 @@ import {
   delTodoItemHandler,
   setHandler,
 } from "./actions";
-
-import { todoPropsFactory } from "./props";
+import { TodoItem } from "./components";
 
 export interface TodoItem {
   key: string;
@@ -42,5 +41,3 @@ updates$.subscribe((update) => {
     console.log("store:", store.snap());
   }
 });
-
-export const createTodoProps = todoPropsFactory(store, dispatcher);

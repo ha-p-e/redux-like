@@ -34,7 +34,13 @@ type ActionHandler<T> = (
 
 `ActionHandler` takes an `Action` as argument and returns various forms of `StoreUpdate` which is essentially just a key value pair representing an update to the [store](#store).
 
-The return type also supports `Promise` and `Observable` types allowing an `ActionHandler` to support asynchronous operations without middleware.
+The return type also supports `Promise` and `Observable` types allowing an `ActionHandler` to support asynchronous operations without middleware. `undefined` is also allowed as a `ActionHandler` may not update the [store](#store).
+
+Unlike a reducer, `ActionHandler` does require the [store](#store) as a parameter to create a `StoreUpdate`. However, if required, a `ReadonlyStore` can be passed in along with other dependencies such as services using a curried function. For example:
+
+```ts
+(store: ReadonlyStore) => (action: Action<T>) => ...
+```
 
 ### Store
 
@@ -58,12 +64,15 @@ Exposing values as an `Observable` enables stream level operations such as debou
 
 ### Connect
 
-`Connect` connects the `Observable` store values to components.
+`connect` is similar to the React Redux [connect](https://react-redux.js.org/api/connect) and connects the `Observable` store and values to components.
 
 ```tsx
-function Connect<T>(props: { component: FC<T>; props: Observable<T> | T });
+const connect =
+  <T extends {}, P extends {}>(
+    Component: FC<T & P>,
+    connectProps: (props: P) => Observable<T> | T
+  ): FC<P> =>
+  (props: P) => ...
 ```
 
 It allows function components to access state through props easily, without the need for hooks. Hooks can often encourage code that couples state, logic, and effects with components, which reduces maintainability.
-
-Instead of typical prop drilling, child props are passed to through a parents as a prop creation function. This decouples parent components with changes to child props.

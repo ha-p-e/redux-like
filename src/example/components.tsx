@@ -1,7 +1,15 @@
-import { Connect } from "../hooks";
-import { AddTodoProps, TodoItemProps, TodoListProps, TodoProps } from "./props";
+import { connect } from "../hooks";
+import { dispatcher, store } from "./module";
+import {
+  AddTodoProps,
+  TodoItemProps,
+  TodoListProps,
+  createAddTodoProps,
+  createTodoItemProps,
+  createTodoListProps,
+} from "./props";
 
-const AddTodo = (props: AddTodoProps) => (
+export const AddTodo = (props: AddTodoProps) => (
   <div>
     <input
       type="text"
@@ -14,7 +22,7 @@ const AddTodo = (props: AddTodoProps) => (
   </div>
 );
 
-const TodoItem = (props: TodoItemProps) => (
+export const TodoItem = (props: TodoItemProps) => (
   <div key={props.item.key}>
     <input
       type="checkbox"
@@ -32,27 +40,36 @@ const TodoItem = (props: TodoItemProps) => (
   </div>
 );
 
-const TodoList = (props: TodoListProps) => (
+export const TodoList = (props: TodoListProps) => (
   <div>
-    {props.todoList.map((key) => (
-      <Connect<TodoItemProps>
-        key={key}
-        component={TodoItem}
-        props={props.createTodoItemProps(key)}
-      />
-    ))}
+    {props.todoList.map((key) => {
+      return <ConnectedTodoItem key={key} todoKey={key} />;
+    })}
   </div>
 );
 
-export const Todo = (props: TodoProps) => (
-  <div>
-    <Connect<AddTodoProps>
-      component={AddTodo}
-      props={props.createAddTodoProps()}
-    />
-    <Connect<TodoListProps>
-      component={TodoList}
-      props={props.createTodoListProps()}
-    />
-  </div>
+export const Todo = () => {
+  return (
+    <div>
+      <ConnectedAddTodo />
+      <ConnectedTodoList />
+    </div>
+  );
+};
+
+// todo useContext for store and dispatcher?
+
+export const ConnectedAddTodo = connect(
+  AddTodo,
+  createAddTodoProps(store, dispatcher)
+);
+
+export const ConnectedTodoItem = connect(
+  TodoItem,
+  createTodoItemProps(store, dispatcher)
+);
+
+export const ConnectedTodoList = connect(
+  TodoList,
+  createTodoListProps(store, dispatcher)
 );

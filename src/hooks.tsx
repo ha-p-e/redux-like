@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Observable, of } from "rxjs";
 
 export function useObservable<T>(observable: Observable<T>): T | undefined;
@@ -17,12 +17,19 @@ export function useObservable<T>(
   return value;
 }
 
-export function Connect<T>(props: {
-  component: FC<T>;
-  props: Observable<T> | T;
-}) {
-  const observableProps = useObservable(
-    props.props instanceof Observable ? props.props : of(props.props)
-  );
-  return <>{observableProps && <props.component {...observableProps} />}</>;
-}
+export const connect =
+  <T extends {}, P extends {}>(
+    Component: FC<T & P>,
+    connectProps: (props: P) => Observable<T> | T
+  ): FC<P> =>
+  (props: P) => {
+    const connectedProps = useMemo(() => connectProps(props), [props]);
+    const observableProps = useObservable(
+      connectedProps instanceof Observable ? connectedProps : of(connectedProps)
+    );
+    return (
+      <>
+        {observableProps && <Component {...{ ...observableProps, ...props }} />}
+      </>
+    );
+  };
