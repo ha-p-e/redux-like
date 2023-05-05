@@ -70,9 +70,8 @@ Exposing values as an `Observable` enables stream level operations such as debou
 const connect =
   <T extends {}, P extends {}>(
     Component: FC<T & P>,
-    connectProps: (props: P) => Observable<T> | T
-  ): FC<P> =>
-  (props: P) => ...
+    contextProps: (store: ReadonlyStore, dispatch: Dispatcher) => (props: P) => Observable<T> | T
+  ): FC<P> => ...
 ```
 
 It allows function components to access state through props easily, without the need for hooks. Hooks can often encourage code that couples state, logic, and effects with components, which reduces maintainability.

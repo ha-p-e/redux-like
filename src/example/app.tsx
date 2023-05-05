@@ -1,4 +1,5 @@
 import { Dispatcher } from "../dispatcher";
+import { ConnectContextProvider } from "../connect";
 import { Store } from "../store";
 import {
   Actions,
@@ -7,7 +8,7 @@ import {
   delTodoItemHandler,
   setHandler,
 } from "./actions";
-import { TodoItem } from "./components";
+import { Todo, TodoItem } from "./views";
 
 export interface TodoItem {
   key: string;
@@ -26,7 +27,7 @@ export const store = Store.create();
 store.set(Keys.todoText, "");
 store.set(Keys.todoList, []);
 
-export const [dispatcher, updates$] = Dispatcher.create(store)([
+export const [dispatch, updates$] = Dispatcher.create(store)([
   [Actions.set, setHandler],
   [Actions.addTodoItem, addTodoItemHandler(store)],
   [Actions.completeTodoItem, completeTodoListHandler(store)],
@@ -41,3 +42,9 @@ updates$.subscribe((update) => {
     console.log("store:", store.snap());
   }
 });
+
+export const App = () => (
+  <ConnectContextProvider context={{ store, dispatch }}>
+    <Todo />
+  </ConnectContextProvider>
+);

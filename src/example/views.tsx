@@ -1,5 +1,4 @@
-import { connect } from "../hooks";
-import { dispatcher, store } from "./module";
+import { connect } from "../connect";
 import {
   AddTodoProps,
   TodoItemProps,
@@ -57,19 +56,6 @@ export const Todo = () => {
   );
 };
 
-// todo useContext for store and dispatcher?
-
-export const ConnectedAddTodo = connect(
-  AddTodo,
-  createAddTodoProps(store, dispatcher)
-);
-
-export const ConnectedTodoItem = connect(
-  TodoItem,
-  createTodoItemProps(store, dispatcher)
-);
-
-export const ConnectedTodoList = connect(
-  TodoList,
-  createTodoListProps(store, dispatcher)
-);
+export const ConnectedAddTodo = connect(AddTodo, createAddTodoProps);
+export const ConnectedTodoItem = connect(TodoItem, createTodoItemProps);
+export const ConnectedTodoList = connect(TodoList, createTodoListProps);

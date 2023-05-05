@@ -1,5 +1,5 @@
 import { map } from "rxjs";
-import { Keys, TodoItem } from "./module";
+import { Keys, TodoItem } from "./app";
 import { Dispatcher } from "../dispatcher";
 import { ReadonlyStore } from "../store";
 import { Action } from "../action";

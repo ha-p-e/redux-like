@@ -6,7 +6,7 @@ import {
   ReadonlyStore,
   StoreKey,
 } from "../store";
-import { Keys, TodoItem } from "./module";
+import { Keys, TodoItem } from "./app";
 import { nanoid } from "nanoid";
 
 export module Actions {
