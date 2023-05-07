@@ -26,27 +26,25 @@ function useObservable<T>(
   return value;
 }
 
-type ConnectContextValue = {
+type ContextValue = {
   store: ReadonlyStore;
   dispatch: Dispatcher;
 };
 
-const ConnectContext = createContext<ConnectContextValue>(
-  {} as ConnectContextValue
-);
+const Context = createContext<ContextValue>({} as ContextValue);
 
-export const ConnectContextProvider = ({
+export const ContextProvider = ({
   children,
   context,
 }: {
   children: any;
-  context: ConnectContextValue;
+  context: ContextValue;
 }) => (
-  <ConnectContext.Provider
+  <Context.Provider
     value={{ store: context.store, dispatch: context.dispatch }}
   >
     {children}
-  </ConnectContext.Provider>
+  </Context.Provider>
 );
 
 export const connect =
@@ -58,7 +56,7 @@ export const connect =
     ) => (props: P) => Observable<T> | T
   ): FC<P> =>
   (props: P) => {
-    const { store, dispatch } = useContext(ConnectContext);
+    const { store, dispatch } = useContext(Context);
     const connectedProps = useMemo(
       () => contextProps(store, dispatch)(props),
       [props]

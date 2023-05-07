@@ -1,5 +1,5 @@
 import { Dispatcher } from "../dispatcher";
-import { ConnectContextProvider } from "../connect";
+import { ContextProvider } from "../connect";
 import { Store } from "../store";
 import {
   Actions,
@@ -44,7 +44,7 @@ updates$.subscribe((update) => {
 });
 
 export const App = () => (
-  <ConnectContextProvider context={{ store, dispatch }}>
+  <ContextProvider context={{ store, dispatch }}>
     <Todo />
-  </ConnectContextProvider>
+  </ContextProvider>
 );
