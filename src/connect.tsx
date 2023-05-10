@@ -59,7 +59,7 @@ export const connect =
     const { store, dispatch } = useContext(Context);
     const connectedProps = useMemo(
       () => contextProps(store, dispatch)(props),
-      [props]
+      [dispatch, props, store]
     );
     const observableProps = useObservable(
       connectedProps instanceof Observable ? connectedProps : of(connectedProps)

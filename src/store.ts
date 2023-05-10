@@ -93,19 +93,19 @@ class StoreImpl implements Store {
   }
 }
 
-export module Store {
-  export const create = () => new StoreImpl() as Store;
+export const create = () => new StoreImpl() as Store;
 
-  export const key = <T>(key: any): StoreKey<T> => ({ key });
+export const key = <T>(key: any): StoreKey<T> => ({ key });
 
-  export const set = <T>(key: StoreKey<T>, value: T): SetUpdate<T> => ({
-    key,
-    value,
-    action: "set",
-  });
+export const set = <T>(key: StoreKey<T>, value: T): SetUpdate<T> => ({
+  key,
+  value,
+  action: "set",
+});
 
-  export const del = <T>(key: StoreKey<T>): DelUpdate<T> => ({
-    key,
-    action: "del",
-  });
-}
+export const del = <T>(key: StoreKey<T>): DelUpdate<T> => ({
+  key,
+  action: "del",
+});
+
+export const Store = { create, key, set, del };

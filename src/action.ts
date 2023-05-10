@@ -17,15 +17,15 @@ export type ActionHandler<T> = (
   | Observable<StoreUpdate | StoreUpdate[]>
   | undefined;
 
-export module Action {
-  export const type = <T>(type: any): ActionType<T> => ({ type });
+const type = <T>(type: any): ActionType<T> => ({ type });
 
-  export function create<T>(type: ActionType<T>): Action<T>;
-  export function create<T>(type: ActionType<T>, payload: T): Action<T>;
-  export function create<T>(
-    type: ActionType<T>,
-    payload?: T
-  ): Action<T> | Action<unknown> {
-    return { type, payload };
-  }
+function create<T>(type: ActionType<T>): Action<T>;
+function create<T>(type: ActionType<T>, payload: T): Action<T>;
+function create<T>(
+  type: ActionType<T>,
+  payload?: T
+): Action<T> | Action<unknown> {
+  return { type, payload };
 }
+
+export const Action = { type, create };
