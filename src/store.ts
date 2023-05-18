@@ -11,7 +11,6 @@ type StoreValue<T> = {
 export type ReadonlyStore = {
   has<T>(key: StoreKey<T>): boolean;
   get<T>(key: StoreKey<T>): T | undefined;
-  getOrElse<T>(key: StoreKey<T>, orElse: T): T;
   get$<T>(key: StoreKey<T>): Observable<T>;
   snap(): Record<string, any>;
 };
@@ -70,8 +69,6 @@ class StoreImpl implements Store {
 
   get = <T>(key: StoreKey<T>): T | undefined => this.getOrCreate(key).get();
 
-  getOrElse = <T>(key: StoreKey<T>, orElse: T): T => this.get(key) ?? orElse;
-
   get$ = <T>(key: StoreKey<T>): Observable<T> => this.getOrCreate(key).get$();
 
   snap = (): Record<string, any> =>
@@ -95,7 +92,7 @@ class StoreImpl implements Store {
 
 export const create = () => new StoreImpl() as Store;
 
-export const key = <T>(key: any): StoreKey<T> => ({ key });
+export const key = <T>(key: string): StoreKey<T> => ({ key });
 
 export const set = <T>(key: StoreKey<T>, value: T): SetUpdate<T> => ({
   key,

@@ -9,12 +9,12 @@ import {
 import { Keys, TodoItem } from "./app";
 import { nanoid } from "nanoid";
 
-export module Actions {
-  export const set = Action.type<StoreUpdate>("set");
-  export const addTodoItem = Action.type("addTodoItem");
-  export const completeTodoItem = Action.type<TodoItem>("completeTodoItem");
-  export const delTodoItem = Action.type<TodoItem>("delTodoItem");
-}
+export const Actions = {
+  set: Action.type<StoreUpdate>("set"),
+  addTodoItem: Action.type("addTodoItem"),
+  completeTodoItem: Action.type<TodoItem>("completeTodoItem"),
+  delTodoItem: Action.type<TodoItem>("delTodoItem"),
+};
 
 export const set = <T>(key: StoreKey<T>, value: T) => ({
   type: Actions.set,
@@ -31,10 +31,10 @@ export const addTodoItemHandler =
     return [
       Store.set(Keys.todoItem(key), {
         key,
-        description: store.getOrElse(Keys.todoText, ""),
+        description: store.get(Keys.todoText) ?? "",
         completed: false,
       }),
-      Store.set(Keys.todoList, [...store.getOrElse(Keys.todoList, []), key]),
+      Store.set(Keys.todoList, [...(store.get(Keys.todoList) ?? []), key]),
       Store.set(Keys.todoText, ""),
     ];
   };
@@ -56,8 +56,6 @@ export const delTodoItemHandler =
       Store.del(Keys.todoItem(action.payload.key)),
       Store.set(
         Keys.todoList,
-        store
-          .getOrElse(Keys.todoList, [])
-          .filter((i) => i !== action.payload.key)
+        store.get(Keys.todoList) ?? [].filter((i) => i !== action.payload.key)
       ),
     ];

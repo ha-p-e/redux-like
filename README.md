@@ -29,7 +29,7 @@ type ActionHandler<T> = (
   | StoreUpdate[]
   | Promise<StoreUpdate | StoreUpdate[]>
   | Observable<StoreUpdate | StoreUpdate[]>
-  | undefined;
+  | void;
 ```
 
 `ActionHandler` takes an `Action` as argument and returns various forms of `StoreUpdate` which is essentially just a key value pair representing an update to the [store](#store).

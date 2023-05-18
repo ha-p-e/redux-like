@@ -16,12 +16,11 @@ export interface TodoItem {
   completed: boolean;
 }
 
-export module Keys {
-  export const todoText = Store.key<string>("todoText");
-  export const todoList = Store.key<string[]>("todoList");
-  export const todoItem = (key: string) =>
-    Store.key<TodoItem>(`todoItem/${key}`);
-}
+export const Keys = {
+  todoText: Store.key<string>("todoText"),
+  todoList: Store.key<string[]>("todoList"),
+  todoItem: (key: string) => Store.key<TodoItem>(`todoItem/${key}`),
+};
 
 export const store = Store.create();
 store.set(Keys.todoText, "");

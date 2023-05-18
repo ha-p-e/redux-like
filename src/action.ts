@@ -15,9 +15,9 @@ export type ActionHandler<T> = (
   | StoreUpdate[]
   | Promise<StoreUpdate | StoreUpdate[]>
   | Observable<StoreUpdate | StoreUpdate[]>
-  | undefined;
+  | void;
 
-const type = <T>(type: any): ActionType<T> => ({ type });
+const type = <T>(type: string): ActionType<T> => ({ type });
 
 function create<T>(type: ActionType<T>): Action<T>;
 function create<T>(type: ActionType<T>, payload: T): Action<T>;

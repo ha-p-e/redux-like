@@ -10,7 +10,7 @@ const toObservableUpdate = (
     | StoreUpdate[]
     | Promise<StoreUpdate | StoreUpdate[]>
     | Observable<StoreUpdate | StoreUpdate[]>
-    | undefined
+    | void
 ): Observable<StoreUpdate[]> => {
   if (update instanceof Observable) {
     return update.pipe(map((x) => (Array.isArray(x) ? x : [x])));
