@@ -25,14 +25,15 @@ Actions are processed by corresponding `ActionHandler` functions.
 type ActionHandler<T> = (
   action: Action<T>
 ) =>
+  | Action
   | StoreUpdate
   | StoreUpdate[]
-  | Promise<StoreUpdate | StoreUpdate[]>
-  | Observable<StoreUpdate | StoreUpdate[]>
+  | Promise<Action | StoreUpdate | StoreUpdate[]>
+  | Observable<Action | StoreUpdate | StoreUpdate[]>
   | void;
 ```
 
-`ActionHandler` takes an `Action` as argument and returns various forms of `StoreUpdate` which is essentially just a key value pair representing an update to the [store](#store).
+`ActionHandler` takes an `Action` as argument and returns further child `Action` or various forms of `StoreUpdate` which is essentially just a key value pair representing an update to the [store](#store).
 
 The return type also supports `Promise` and `Observable` types allowing an `ActionHandler` to support asynchronous operations without middleware. `undefined` is also allowed as a `ActionHandler` may not update the [store](#store).
 
