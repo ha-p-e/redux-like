@@ -10,11 +10,7 @@ import {
 
 export const AddTodo = (props: AddTodoProps) => (
   <div>
-    <input
-      type="text"
-      value={props.addTodoText}
-      onChange={(e) => props.setAddTodoText(e.target.value)}
-    />
+    <input type="text" value={props.addTodoText} onChange={(e) => props.setAddTodoText(e.target.value)} />
     <button onClick={() => props.addTodo()} disabled={props.addTodoText === ""}>
       +
     </button>
@@ -23,11 +19,7 @@ export const AddTodo = (props: AddTodoProps) => (
 
 export const TodoItem = (props: TodoItemProps) => (
   <div key={props.item.key}>
-    <input
-      type="checkbox"
-      checked={props.item.completed}
-      onChange={() => props.completed()}
-    />
+    <input type="checkbox" checked={props.item.completed} onChange={() => props.completed()} />
     <span
       style={{
         textDecoration: props.item.completed ? "line-through" : undefined,

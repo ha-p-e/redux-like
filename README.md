@@ -1,6 +1,6 @@
 # redux-like
 
-Experiment to explore a state management approach similar to Redux, that aims to further simplify data flow, reduce boilerplate, and improve performance and maintainability.
+Experiment to explore a state management approach similar to [Redux](https://redux.js.org/), that aims to further simplify data flow, reduce boilerplate, and improve performance and maintainability.
 
 ### Data Flow
 
@@ -35,13 +35,7 @@ type ActionHandler<T> = (
 
 `ActionHandler` takes an `Action` as argument and returns further child `Action` or various forms of `StoreUpdate` which is essentially just a key value pair representing an update to the [store](#store).
 
-The return type also supports `Promise` and `Observable` types allowing an `ActionHandler` to support asynchronous operations without middleware. `undefined` is also allowed as a `ActionHandler` may not update the [store](#store).
-
-Unlike a reducer, `ActionHandler` does require the [store](#store) as a parameter to create a `StoreUpdate`. However, if required, a `ReadonlyStore` can be passed in along with other dependencies such as services using a curried function. For example:
-
-```ts
-(store: ReadonlyStore) => (action: Action<T>) => ...
-```
+The return type also supports `Promise` and `Observable` types allowing an `ActionHandler` to support asynchronous operations without middleware. `void` is also allowed as a `ActionHandler` may not update the [store](#store).
 
 ### Store
 
@@ -71,8 +65,37 @@ Exposing values as an `Observable` enables stream level operations such as debou
 const connect =
   <T extends {}, P extends {}>(
     Component: FC<T & P>,
-    contextProps: (store: ReadonlyStore, dispatch: Dispatcher) => (props: P) => Observable<T> | T
+    contextProps: PropCreator<T, P>
   ): FC<P> => ...
 ```
 
 It allows function components to access state through props easily, without the need for hooks. Hooks can often encourage code that couples state, logic, and effects with components, which reduces maintainability.
+
+`PropCreator` enables props to be created with the following function signature which provides helper store getters and dispatch functions.
+
+```ts
+(props: P) => ({ get, get$, dispatch, ... }) => {...}
+```
+
+### Toolkit
+
+Similar to [Redux Toolkit](https://redux-toolkit.js.org/), `toolkit.ts` provides helper functions to simplify the workflow. `createSlice` takes in `storeKeys`,  `actionHandlers` and optionally an existing store and returns typesafe keys and actions.
+
+```ts
+const { store, keys, actions, dispatch, ... } = createSlice(
+  {
+    storeKeys: {
+      path: {
+        key: init(123),
+      } 
+      ...
+    },
+    actionHandlers: {
+      action: (payload: number) => ({ get, get$, set, dispatch, ... }) => {...}
+      ...
+    }
+  }
+)
+```
+
+This will generate a typesafe ```StoreKey<number,`path/key`>``` and set that key in the store to `123`, a generate typesafe ```Action<number, `action`>``` and ```ActionHandler<number, `action`>```.

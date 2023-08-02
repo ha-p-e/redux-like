@@ -1,5 +1,5 @@
 import { Observable, ReplaySubject } from "rxjs";
-export type StoreKey<T> = { key: string };
+export type StoreKey<T, K extends string = string> = { key: K };
 
 type StoreValue<T> = {
   get(): T | undefined;
@@ -72,9 +72,7 @@ class StoreImpl implements Store {
   get$ = <T>(key: StoreKey<T>): Observable<T> => this.getOrCreate(key).get$();
 
   snap = (): Record<string, any> =>
-    Object.fromEntries(
-      Array.from(this.store).map(([key, value]) => [key, value.get()])
-    );
+    Object.fromEntries(Array.from(this.store).map(([key, value]) => [key, value.get()]));
 
   set<T>(key: StoreKey<T>, value: T): Store {
     this.getOrCreate(key).set(value);

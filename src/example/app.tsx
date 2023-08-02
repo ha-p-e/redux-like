@@ -1,14 +1,8 @@
-import { Dispatcher } from "../dispatcher";
 import { ContextProvider } from "../connect";
-import { Store } from "../store";
-import {
-  Actions,
-  addTodoItemHandler,
-  completeTodoListHandler,
-  delTodoItemHandler,
-  setHandler,
-} from "./actions";
 import { Todo, TodoItem } from "./views";
+import { setHandler, addTodoItemHandler, completeTodoListHandler, delTodoItemHandler } from "./handlers";
+import { createSlice } from "../toolkit";
+import { init } from "../toolkit";
 
 export interface TodoItem {
   key: string;
@@ -16,22 +10,19 @@ export interface TodoItem {
   completed: boolean;
 }
 
-export const Keys = {
-  todoText: Store.key<string>("todoText"),
-  todoList: Store.key<string[]>("todoList"),
-  todoItem: (key: string) => Store.key<TodoItem>(`todoItem/${key}`),
-};
-
-export const store = Store.create();
-store.set(Keys.todoText, "");
-store.set(Keys.todoList, []);
-
-export const [dispatch, updates$] = Dispatcher.create(store)([
-  [Actions.set, setHandler],
-  [Actions.addTodoItem, addTodoItemHandler(store)],
-  [Actions.completeTodoItem, completeTodoListHandler(store)],
-  [Actions.delTodoItem, delTodoItemHandler(store)],
-]);
+export const { store, keys, actions, dispatch, updates$ } = createSlice({
+  storeKeys: {
+    todoText: init(""),
+    todoList: init([]),
+    todoItem: (key: string) => init<TodoItem>({ key, description: "", completed: false }),
+  },
+  actionHandlers: {
+    set: setHandler,
+    addTodoItem: addTodoItemHandler,
+    completeTodoItem: completeTodoListHandler,
+    delTodoItem: delTodoItemHandler,
+  },
+});
 
 updates$.subscribe((update) => {
   if (update instanceof Error) console.log(update);
