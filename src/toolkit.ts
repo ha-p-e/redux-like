@@ -91,7 +91,7 @@ type ActionHandlerHelper = {
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
 };
 
-export type ActionHandlerFunc<P = any> = (payload: P) => (helper: ActionHandlerHelper) => void;
+export type ActionHandlerFunc<P = void> = (payload: P) => (helper: ActionHandlerHelper) => void;
 
 export type ActionTypeNode = { [key: string]: ActionTypeNode } | ActionHandlerFunc<any>;
 

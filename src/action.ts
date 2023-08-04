@@ -6,7 +6,7 @@ export type Action<P = any, T extends string = string> = {
   payload: P;
 };
 
-export type ActionCreator<P, T extends string> = (payload?: P) => Action<P, T>;
+export type ActionCreator<P, T extends string> = (payload: P) => Action<P, T>;
 
 export const isAction = (action: any): action is Action => "type" in action && "payload" in action;
 
