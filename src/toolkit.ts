@@ -1,7 +1,7 @@
 import { ReadonlyStore, Store, StoreKey, StoreUpdate } from "./store";
 import { Action, ActionCreator, ActionHandler } from "./action";
 import { Dispatcher } from "./dispatcher";
-import { Observable } from "rxjs";
+import { Observable, lastValueFrom } from "rxjs";
 
 // avoids leading "/" in path
 type Path<Parent extends string, Node extends string> = Parent extends "" ? Node : `${Parent}/${Node}`;
@@ -91,7 +91,9 @@ type ActionHandlerHelper = {
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
 };
 
-export type ActionHandlerFunc<P = void> = (payload: P) => (helper: ActionHandlerHelper) => void;
+export type ActionHandlerFunc<P = void> = (
+  payload: P
+) => (helper: ActionHandlerHelper) => void | Promise<unknown> | Observable<unknown>;
 
 export type ActionTypeNode = { [key: string]: ActionTypeNode } | ActionHandlerFunc<any>;
 
@@ -134,9 +136,9 @@ const createActionHandler =
   (action: Action<P, T>) =>
     new Observable<Action | StoreUpdate | StoreUpdate<[]>>((subscriber) => {
       const helper: ActionHandlerHelper = {
-        has: <T>(key: StoreKey<T>) => store.has(key),
-        get: <T>(key: StoreKey<T>) => store.get(key),
-        get$: <T>(key: StoreKey<T>) => store.get$(key),
+        has: (key) => store.has(key),
+        get: (key) => store.get(key),
+        get$: (key) => store.get$(key),
         set: (key, value) => subscriber.next(Store.set(key, value)),
         del: (key) => subscriber.next(Store.del(key)),
         dispatch: (action) => subscriber.next(action),
@@ -221,3 +223,25 @@ export const createSlice = <
   const [dispatch, updates$] = Dispatcher.create(store)(flattenedHandlers as Record<string, ActionHandler<any>>);
   return { store, keys, actions, dispatch, updates$ };
 };
+
+export const testActionHandler =
+  (store: ReadonlyStore) =>
+  <P>(handler: ActionHandlerFunc<P>) =>
+  (payload: P): Promise<(Action | StoreUpdate)[]> => {
+    const updates: (Action | StoreUpdate)[] = [];
+    const helper: ActionHandlerHelper = {
+      has: (key) => store.has(key),
+      get: (key) => store.get(key),
+      get$: (key) => store.get$(key),
+      set: (key, value) => updates.push(Store.set(key, value)),
+      del: (key) => updates.push(Store.del(key)),
+      dispatch: (action) => updates.push(action),
+    };
+    const result = handler(payload)(helper);
+    if (result instanceof Observable) {
+      return lastValueFrom(result).then(() => updates);
+    } else if (result instanceof Promise) {
+      return result.then(() => updates);
+    }
+    return Promise.resolve(updates);
+  };

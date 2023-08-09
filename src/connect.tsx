@@ -36,9 +36,9 @@ type PropCreatorHelper = {
 };
 
 const createPropCreatorHelper = (store: ReadonlyStore, dispatch: Dispatcher): PropCreatorHelper => ({
-  has: <T,>(key: StoreKey<T>) => store.has(key),
-  get: <T,>(key: StoreKey<T>) => store.get(key),
-  get$: <T,>(key: StoreKey<T>) => store.get$(key),
+  has: (key) => store.has(key),
+  get: (key) => store.get(key),
+  get$: (key) => store.get$(key),
   dispatch: (action) => dispatch(action),
 });
 
