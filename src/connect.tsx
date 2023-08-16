@@ -30,7 +30,7 @@ export const ContextProvider = ({ children, context }: { children: any; context:
 
 type PropCreatorHelper = {
   has: <T>(key: StoreKey<T>) => boolean;
-  get: <T>(key: StoreKey<T>) => T | undefined;
+  get: <T>(key: StoreKey<T>) => T;
   get$: <T>(key: StoreKey<T>) => Observable<T>;
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
 };

@@ -1,8 +1,8 @@
 import { Observable, ReplaySubject } from "rxjs";
-export type StoreKey<T, K extends string = string> = { key: K };
+export type StoreKey<T, K extends string = string> = { key: K; initialValue: T };
 
 type StoreValue<T> = {
-  get(): T | undefined;
+  get(): T;
   get$(): Observable<T>;
   set(value: T): StoreValue<T>;
   del(): void;
@@ -10,7 +10,7 @@ type StoreValue<T> = {
 
 export type ReadonlyStore = {
   has<T>(key: StoreKey<T>): boolean;
-  get<T>(key: StoreKey<T>): T | undefined;
+  get<T>(key: StoreKey<T>): T;
   get$<T>(key: StoreKey<T>): Observable<T>;
   snap(): Record<string, any>;
 };
@@ -37,9 +37,13 @@ export function isSetUpdate<T>(update: StoreUpdate<T>): update is SetUpdate<T> {
 
 class StoreValueImpl<T> implements StoreValue<T> {
   private readonly updates$ = new ReplaySubject<T>(1);
-  private value: T | undefined = undefined;
+  private value!: T; // assigned with set in constructor
 
-  get = (): T | undefined => this.value;
+  constructor(value: T) {
+    this.set(value);
+  }
+
+  get = (): T => this.value;
 
   get$ = (): Observable<T> => this.updates$.asObservable();
 
@@ -50,7 +54,6 @@ class StoreValueImpl<T> implements StoreValue<T> {
   }
 
   del(): void {
-    this.value = undefined;
     this.updates$.complete();
   }
 }
@@ -59,15 +62,13 @@ class StoreImpl implements Store {
   private readonly store = new Map<string, StoreValue<any>>();
 
   private getOrCreate<T>(key: StoreKey<T>): StoreValue<T> {
-    if (!this.store.has(key.key)) {
-      this.store.set(key.key, new StoreValueImpl());
-    }
+    if (!this.store.has(key.key)) this.store.set(key.key, new StoreValueImpl(key.initialValue));
     return this.store.get(key.key)!;
   }
 
   has = <T>(key: StoreKey<T>): boolean => this.store.has(key.key);
 
-  get = <T>(key: StoreKey<T>): T | undefined => this.getOrCreate(key).get();
+  get = <T>(key: StoreKey<T>): T => this.getOrCreate(key).get();
 
   get$ = <T>(key: StoreKey<T>): Observable<T> => this.getOrCreate(key).get$();
 
@@ -90,7 +91,7 @@ class StoreImpl implements Store {
 
 export const create = () => new StoreImpl() as Store;
 
-export const key = <T>(key: string): StoreKey<T> => ({ key });
+export const key = <T>(key: string, initialValue: T): StoreKey<T> => ({ key, initialValue });
 
 export const set = <T>(key: StoreKey<T>, value: T): SetUpdate<T> => ({
   key,

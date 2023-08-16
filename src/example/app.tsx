@@ -10,10 +10,10 @@ export interface TodoItem {
   completed: boolean;
 }
 
-export const { store, keys, actions, dispatch, updates$ } = createSlice({
+export const { keys, actions, initSlice } = createSlice({
   storeKeys: {
     todoText: init(""),
-    todoList: init([]),
+    todoList: init([] as string[]),
     todoItem: (key: string) => init<TodoItem>({ key, description: "", completed: false }),
   },
   actionHandlers: {
@@ -23,6 +23,8 @@ export const { store, keys, actions, dispatch, updates$ } = createSlice({
     delTodoItem: delTodoItemHandler,
   },
 });
+
+const { store, dispatch, updates$ } = initSlice();
 
 updates$.subscribe((update) => {
   if (update instanceof Error) console.log(update);

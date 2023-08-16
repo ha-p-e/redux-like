@@ -29,8 +29,7 @@ type StoreKeys<T extends StoreKeyNode, Parent extends string = ""> = {
 const isInitialValue = <T>(value: any): value is InitialValue<T> =>
   typeof value === "object" && value !== null && "initialValue" in value;
 
-export const initStore = <T extends Record<string, StoreKeyNode>>(
-  store: Store,
+export const createStoreKeys = <T extends Record<string, StoreKeyNode>>(
   storeKeys: T,
   parent: string = ""
 ): StoreKeys<T> =>
@@ -38,24 +37,20 @@ export const initStore = <T extends Record<string, StoreKeyNode>>(
     Object.entries(storeKeys).map(([k, v]) => {
       // typeof v == (node: string) => InitialValue<any> | Record<string, NodeType>
       if (typeof v === "function") {
-        let hasInit = false;
         return [
           k,
           (node: string) => {
             const result = v(node);
             // typeof v == (node: string) => InitialValue<any>
             if (isInitialValue(result)) {
-              const key = { key: parent === "" ? `${k}/${node}` : `${parent}/${k}/${node}` };
-              // ensure we only set the initial value once
-              if (!hasInit) {
-                store.set(key, result.initialValue);
-                hasInit = true;
-              }
-              return key;
+              return {
+                key: parent === "" ? `${k}/${node}` : `${parent}/${k}/${node}`,
+                initialValue: result.initialValue,
+              };
             }
             // typeof v == (node: string) => Record<string, NodeType>
             else if (typeof result === "object" && result !== null) {
-              return initStore(store, result, parent === "" ? `${k}/${node}` : `${parent}/${k}/${node}`);
+              return createStoreKeys(result, parent === "" ? `${k}/${node}` : `${parent}/${k}/${node}`);
             }
             // should not happen given the input type constraints
             throw new Error(`Invalid return type ${typeof result}`);
@@ -64,13 +59,12 @@ export const initStore = <T extends Record<string, StoreKeyNode>>(
       }
       // typeof v == InitialValue<any>
       else if (isInitialValue(v)) {
-        const key = { key: parent === "" ? k : `${parent}/${k}` };
-        store.set(key, v.initialValue);
+        const key = { key: parent === "" ? k : `${parent}/${k}`, initialValue: v.initialValue };
         return [k, key];
       }
       // typeof v == Record<string, NodeType>
       else if (typeof v === "object" && v !== null) {
-        return [k, initStore(store, v, parent === "" ? k : `${parent}/${k}`)];
+        return [k, createStoreKeys(v, parent === "" ? k : `${parent}/${k}`)];
       } else {
         // should not happen given the input type constraints
         throw new Error(`Invalid type ${typeof v}`);
@@ -84,7 +78,7 @@ export const init = <T>(value: T): InitialValue<T> => ({ initialValue: value });
 
 type ActionHandlerHelper = {
   has: <T>(key: StoreKey<T>) => boolean;
-  get: <T>(key: StoreKey<T>) => T | undefined;
+  get: <T>(key: StoreKey<T>) => T;
   get$: <T>(key: StoreKey<T>) => Observable<T>;
   set: <T>(key: StoreKey<T>, value: T) => void;
   del: <T>(key: StoreKey<T>) => void;
@@ -161,6 +155,19 @@ export const createActionHandlers = <T extends Record<string, ActionTypeNode>>(
     })
   );
 
+export const createActionHandlersCreator =
+  <T extends Record<string, ActionTypeNode>>(handlers: T, parent: string = "") =>
+  (store: ReadonlyStore): ActionHandlers<T> =>
+    Object.fromEntries(
+      Object.entries(handlers).map(([k, v]) => {
+        if (typeof v === "object" && v !== null) {
+          return [k, createActionHandlers(store, v, `${parent}/${k}`)];
+        } else {
+          return [k, createActionHandler(store, `${parent}/${k}`, v)];
+        }
+      })
+    );
+
 // Slice
 
 // from https://stackoverflow.com/a/66620803
@@ -212,16 +219,21 @@ const flatten = <T extends object>(obj: T): Flatten<T> => {
 export const createSlice = <
   StoreKeys extends Record<string, StoreKeyNode>,
   ActionHandlers extends Record<string, ActionTypeNode>
->(
-  inputs: { storeKeys: StoreKeys; actionHandlers: ActionHandlers },
-  store: Store = Store.create()
-) => {
-  const keys = initStore(store, inputs.storeKeys);
+>(inputs: {
+  storeKeys: StoreKeys;
+  actionHandlers: ActionHandlers;
+}) => {
+  const keys = createStoreKeys(inputs.storeKeys);
   const actions = createActionCreators(inputs.actionHandlers);
-  const handlers = createActionHandlers(store, inputs.actionHandlers);
-  const flattenedHandlers = flatten(handlers);
-  const [dispatch, updates$] = Dispatcher.create(store)(flattenedHandlers as Record<string, ActionHandler<any>>);
-  return { store, keys, actions, dispatch, updates$ };
+  const handlersCreator = createActionHandlersCreator(inputs.actionHandlers);
+  const initSlice = (store: Store = Store.create()) => {
+    const handlers = handlersCreator(store);
+    const flattenedHandlers = flatten(handlers);
+    const [dispatch, updates$] = Dispatcher.create(store)(flattenedHandlers as Record<string, ActionHandler<any>>);
+    return { store: store as ReadonlyStore, dispatch, updates$ };
+  };
+
+  return { keys, actions, initSlice };
 };
 
 export const testActionHandler =
