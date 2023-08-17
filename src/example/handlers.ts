@@ -1,45 +1,51 @@
+import { of } from "rxjs";
 import { StoreKey } from "../store";
 import { ActionHandlerFunc } from "../toolkit";
-import { keys, TodoItem } from "./app";
+import { keys } from "./app";
 import { nanoid } from "nanoid";
 
+// rx handler example
 export const setHandler: ActionHandlerFunc<{ key: StoreKey<any>; value: any }> =
   ({ key, value }) =>
-  ({ set }) => {
-    set(key, value);
-  };
+  ({ set }) =>
+    of(set(key, value));
 
+// promise handler example
 export const addTodoItemHandler: ActionHandlerFunc =
   () =>
   ({ get, set }) => {
     const key = nanoid();
-    set(keys.todoItem(key), {
-      key,
-      description: get(keys.todoText) ?? "",
-      completed: false,
-    });
-    set(keys.todoList, [...(get(keys.todoList) ?? []), key]);
-    set(keys.todoText, "");
+    // return is needed only for testing to wait for promise to resolve
+    return Promise.resolve(
+      set(keys.todoItem(key), {
+        key,
+        description: get(keys.todoText) ?? "",
+        completed: false,
+      })
+    )
+      .then(() => set(keys.todoList, [...(get(keys.todoList) ?? []), key]))
+      .then(() => set(keys.todoText, ""));
   };
 
-export const completeTodoListHandler: ActionHandlerFunc<TodoItem> =
-  (todo: TodoItem) =>
-  ({ get, set }) => {
-    const item = get(keys.todoItem(todo.key));
+// async handler example
+export const completeTodoListHandler: ActionHandlerFunc<string> =
+  (todoKey: string) =>
+  async ({ get, set }) => {
+    const item = await Promise.resolve(get(keys.todoItem(todoKey)));
     if (item) {
-      return set(keys.todoItem(todo.key), {
+      set(keys.todoItem(todoKey), {
         ...item,
         completed: !item.completed,
       });
     }
   };
 
-export const delTodoItemHandler: ActionHandlerFunc<TodoItem> =
-  (todo: TodoItem) =>
+export const delTodoItemHandler: ActionHandlerFunc<string> =
+  (todoKey: string) =>
   ({ get, set, del }) => {
-    del(keys.todoItem(todo.key));
+    del(keys.todoItem(todoKey));
     set(
       keys.todoList,
-      (get(keys.todoList) ?? []).filter((i) => i !== todo.key)
+      (get(keys.todoList) ?? []).filter((i) => i !== todoKey)
     );
   };

@@ -1,4 +1,4 @@
-import { ReadonlyStore, Store, StoreKey, StoreUpdate } from "./store";
+import { DelUpdate, ReadonlyStore, SetUpdate, Store, StoreKey, StoreUpdate, isSetUpdate } from "./store";
 import { Action, ActionCreator, ActionHandler } from "./action";
 import { Dispatcher } from "./dispatcher";
 import { Observable, lastValueFrom } from "rxjs";
@@ -168,7 +168,7 @@ export const createActionHandlersCreator =
       })
     );
 
-// Slice
+// Slice Helpers
 
 // from https://stackoverflow.com/a/66620803
 type Flatten<T extends object> = object extends T
@@ -230,30 +230,53 @@ export const createSlice = <
     const handlers = handlersCreator(store);
     const flattenedHandlers = flatten(handlers);
     const [dispatch, updates$] = Dispatcher.create(store)(flattenedHandlers as Record<string, ActionHandler<any>>);
-    return { store: store as ReadonlyStore, dispatch, updates$ };
+    return { store, dispatch, updates$ };
   };
 
   return { keys, actions, initSlice };
 };
 
-export const testActionHandler =
-  (store: ReadonlyStore) =>
-  <P>(handler: ActionHandlerFunc<P>) =>
-  (payload: P): Promise<(Action | StoreUpdate)[]> => {
-    const updates: (Action | StoreUpdate)[] = [];
-    const helper: ActionHandlerHelper = {
-      has: (key) => store.has(key),
-      get: (key) => store.get(key),
-      get$: (key) => store.get$(key),
-      set: (key, value) => updates.push(Store.set(key, value)),
-      del: (key) => updates.push(Store.del(key)),
-      dispatch: (action) => updates.push(action),
-    };
-    const result = handler(payload)(helper);
-    if (result instanceof Observable) {
-      return lastValueFrom(result).then(() => updates);
-    } else if (result instanceof Promise) {
-      return result.then(() => updates);
-    }
-    return Promise.resolve(updates);
+// Test Helpers
+
+type ActionHandlerTestHelper = {
+  set: <T>(key: StoreKey<T>, value: T) => SetUpdate<T>;
+  del: <T>(key: StoreKey<T>) => DelUpdate<T>;
+};
+
+export const testActionHandler = async <P>(
+  f: (helper: ActionHandlerTestHelper) => {
+    store?: Store;
+    setup?: StoreUpdate[];
+    handler: ActionHandlerFunc<P>;
+    payload?: P;
+    expected?: (Action | StoreUpdate)[];
+    asserts?: (actual: (Action | StoreUpdate)[]) => void;
+  }
+): Promise<void> => {
+  const { store, setup, handler, payload, expected, asserts } = f({
+    set: (key, value) => Store.set(key, value),
+    del: (key) => Store.del(key),
+  });
+  const definedStore = store ?? Store.create();
+  (setup ?? []).forEach((update) => {
+    if (isSetUpdate(update)) definedStore.set(update.key, update.value);
+    else definedStore.del(update.key);
+  });
+  const actual: (Action | StoreUpdate)[] = [];
+  const helper: ActionHandlerHelper = {
+    has: (key) => definedStore.has(key),
+    get: (key) => definedStore.get(key),
+    get$: (key) => definedStore.get$(key),
+    set: (key, value) => actual.push(Store.set(key, value)),
+    del: (key) => actual.push(Store.del(key)),
+    dispatch: (action) => actual.push(action),
   };
+  const result = payload ? handler(payload)(helper) : (handler as ActionHandlerFunc<void>)()(helper);
+  if (result instanceof Observable) {
+    await lastValueFrom(result).then(() => actual);
+  } else if (result instanceof Promise) {
+    await result.then(() => actual);
+  }
+  if (expected) expect(actual).toStrictEqual(expected);
+  if (asserts) asserts(actual);
+};

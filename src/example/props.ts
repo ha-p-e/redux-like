@@ -36,8 +36,8 @@ export const createTodoItemProps: PropCreator<TodoItemProps, { todoKey: string }
     get$(keys.todoItem(props.todoKey)).pipe(
       map((item) => ({
         item,
-        delete: () => dispatch(actions.delTodoItem(item)),
-        completed: () => dispatch(actions.completeTodoItem(item)),
+        delete: () => dispatch(actions.delTodoItem(item.key)),
+        completed: () => dispatch(actions.completeTodoItem(item.key)),
       }))
     );
 

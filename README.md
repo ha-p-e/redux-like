@@ -79,15 +79,15 @@ It allows function components to access state through props easily, without the 
 
 ### Toolkit
 
-Similar to [Redux Toolkit](https://redux-toolkit.js.org/), `toolkit.ts` provides helper functions to simplify the workflow. `createSlice` takes in `storeKeys`,  `actionHandlers` and optionally an existing store and returns typesafe keys and actions.
+Similar to [Redux Toolkit](https://redux-toolkit.js.org/), `toolkit.ts` provides helper functions to simplify the workflow. `createSlice` takes in `storeKeys`, `actionHandlers` and returns typesafe keys and actions.
 
 ```ts
-const { store, keys, actions, dispatch, ... } = createSlice(
+const { keys, actions, ... } = createSlice(
   {
     storeKeys: {
       path: {
         key: init(123),
-      } 
+      }
       ...
     },
     actionHandlers: {
@@ -98,4 +98,4 @@ const { store, keys, actions, dispatch, ... } = createSlice(
 )
 ```
 
-This will generate a typesafe ```StoreKey<number,`path/key`>``` and set that key in the store to `123`, a generate typesafe ```Action<number, `action`>``` and ```ActionHandler<number, `action`>```.
+This will generate a typesafe `` StoreKey<number,`path/key`> `` and set that key in the store to `123`, a generate typesafe `` Action<number, `action`> `` and `` ActionHandler<number, `action`> ``.
