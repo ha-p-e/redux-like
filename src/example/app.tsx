@@ -1,10 +1,11 @@
 import { ContextProvider } from "../connect";
-import { Todo, TodoItem } from "./views";
 import { setHandler, addTodoItemHandler, completeTodoListHandler, delTodoItemHandler } from "./handlers";
 import { createSlice } from "../toolkit";
 import { init } from "../toolkit";
+import AddTodo from "./components/addTodo";
+import TodoList from "./components/todoList";
 
-export interface TodoItem {
+export interface Todo {
   key: string;
   description: string;
   completed: boolean;
@@ -14,7 +15,7 @@ export const { keys, actions, initSlice } = createSlice({
   storeKeys: {
     todoText: init(""),
     todoList: init([] as string[]),
-    todoItem: (key: string) => init<TodoItem>({ key, description: "", completed: false }),
+    todoItem: (key: string) => init<Todo>({ key, description: "", completed: false }),
   },
   actionHandlers: {
     set: setHandler,
@@ -37,6 +38,9 @@ updates$.subscribe((update) => {
 
 export const App = () => (
   <ContextProvider context={{ store, dispatch }}>
-    <Todo />
+    <div>
+      <AddTodo />
+      <TodoList />
+    </div>
   </ContextProvider>
 );
