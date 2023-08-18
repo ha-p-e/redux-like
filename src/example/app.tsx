@@ -12,12 +12,12 @@ export interface Todo {
 }
 
 export const { keys, actions, initSlice } = createSlice({
-  storeKeys: {
+  keys: {
     todoText: init(""),
     todoList: init([] as string[]),
     todoItem: (key: string) => init<Todo>({ key, description: "", completed: false }),
   },
-  actionHandlers: {
+  actions: {
     set: setHandler,
     addTodoItem: addTodoItemHandler,
     completeTodoItem: completeTodoListHandler,

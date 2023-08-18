@@ -84,13 +84,13 @@ Similar to [Redux Toolkit](https://redux-toolkit.js.org/), `toolkit.ts` provides
 ```ts
 const { keys, actions, ... } = createSlice(
   {
-    storeKeys: {
+    keys: {
       path: {
         key: init(123),
       }
       ...
     },
-    actionHandlers: {
+    actions: {
       action: (payload: number) => ({ get, get$, set, dispatch, ... }) => {...}
       ...
     }

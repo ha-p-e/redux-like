@@ -220,12 +220,12 @@ export const createSlice = <
   StoreKeys extends Record<string, StoreKeyNode>,
   ActionHandlers extends Record<string, ActionTypeNode>
 >(inputs: {
-  storeKeys: StoreKeys;
-  actionHandlers: ActionHandlers;
+  keys: StoreKeys;
+  actions: ActionHandlers;
 }) => {
-  const keys = createStoreKeys(inputs.storeKeys);
-  const actions = createActionCreators(inputs.actionHandlers);
-  const handlersCreator = createActionHandlersCreator(inputs.actionHandlers);
+  const keys = createStoreKeys(inputs.keys);
+  const actions = createActionCreators(inputs.actions);
+  const handlersCreator = createActionHandlersCreator(inputs.actions);
   const initSlice = (store: Store = Store.create()) => {
     const handlers = handlersCreator(store);
     const flattenedHandlers = flatten(handlers);
