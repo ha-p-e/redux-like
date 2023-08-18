@@ -1,4 +1,3 @@
-import { map } from "rxjs";
 import { actions, keys } from "../app";
 import { PropCreator, connect } from "../../connect";
 import TodoItem from "./todoItem";
@@ -18,12 +17,10 @@ const TodoList = (props: TodoListProps) => (
 
 const createTodoListProps: PropCreator<TodoListProps> =
   () =>
-  ({ get$, dispatch }) =>
-    get$(keys.todoList).pipe(
-      map((list) => ({
-        todoList: list,
-        setTodoList: (list: string[]) => dispatch(actions.set({ key: keys.todoList, value: list })),
-      }))
-    );
+  ({ createProps$, dispatch }) =>
+    createProps$(keys.todoList)(([list]) => ({
+      todoList: list,
+      setTodoList: (list: string[]) => dispatch(actions.set({ key: keys.todoList, value: list })),
+    }));
 
 export default connect(TodoList, createTodoListProps);

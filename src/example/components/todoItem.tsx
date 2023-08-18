@@ -1,4 +1,3 @@
-import { map } from "rxjs";
 import { actions, keys, Todo } from "../app";
 import { PropCreator, connect } from "../../connect";
 
@@ -24,13 +23,11 @@ const TodoItem = (props: TodoItemProps) => (
 
 const createTodoItemProps: PropCreator<TodoItemProps, { todoKey: string }> =
   (props: { todoKey: string }) =>
-  ({ get$, dispatch }) =>
-    get$(keys.todoItem(props.todoKey)).pipe(
-      map((item) => ({
-        item,
-        delete: () => dispatch(actions.delTodoItem(item.key)),
-        completed: () => dispatch(actions.completeTodoItem(item.key)),
-      }))
-    );
+  ({ createProps$, dispatch }) =>
+    createProps$(keys.todoItem(props.todoKey))(([item]) => ({
+      item,
+      delete: () => dispatch(actions.delTodoItem(item.key)),
+      completed: () => dispatch(actions.completeTodoItem(item.key)),
+    }));
 
 export default connect(TodoItem, createTodoItemProps);

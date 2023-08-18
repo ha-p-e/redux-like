@@ -1,5 +1,5 @@
 import { FC, createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Observable, of } from "rxjs";
+import { Observable, combineLatest, debounceTime, identity, map, of } from "rxjs";
 import { ReadonlyStore, StoreKey } from "./store";
 import { Dispatcher } from "./dispatcher";
 import { Action } from "./action";
@@ -28,11 +28,18 @@ export const ContextProvider = ({ children, context }: { children: any; context:
   <Context.Provider value={{ store: context.store, dispatch: context.dispatch }}>{children}</Context.Provider>
 );
 
+type Values<T> = {
+  [K in keyof T]: T[K] extends StoreKey<infer V, any> ? V : never;
+};
+
 type PropCreatorHelper = {
   has: <T>(key: StoreKey<T>) => boolean;
   get: <T>(key: StoreKey<T>) => T;
   get$: <T>(key: StoreKey<T>) => Observable<T>;
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
+  createProps$: <T extends StoreKey<any>[]>(
+    ...keys: [...T]
+  ) => <R>(f: (values: Values<T>) => R, debounce?: number) => Observable<R>;
 };
 
 const createPropCreatorHelper = (store: ReadonlyStore, dispatch: Dispatcher): PropCreatorHelper => ({
@@ -40,6 +47,13 @@ const createPropCreatorHelper = (store: ReadonlyStore, dispatch: Dispatcher): Pr
   get: (key) => store.get(key),
   get$: (key) => store.get$(key),
   dispatch: (action) => dispatch(action),
+  createProps$:
+    <T extends StoreKey<any>[]>(...keys: [...T]) =>
+    <R,>(f: (values: Values<T>) => R, debounce?: number) =>
+      (combineLatest(keys.map((key) => store.get$(key))) as Observable<Values<T>>).pipe(
+        debounce ? debounceTime(debounce) : identity,
+        map(f)
+      ),
 });
 
 export type PropCreator<T extends {}, P extends {} = {}> = (

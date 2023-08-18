@@ -1,4 +1,3 @@
-import { map } from "rxjs";
 import { actions, keys } from "../app";
 import { PropCreator, connect } from "../../connect";
 
@@ -19,13 +18,11 @@ const AddTodo = (props: AddTodoProps) => (
 
 const createAddTodoProps: PropCreator<AddTodoProps> =
   () =>
-  ({ get$, dispatch }) =>
-    get$(keys.todoText).pipe(
-      map((addTodoText) => ({
-        addTodoText,
-        setAddTodoText: (text: string) => dispatch(actions.set({ key: keys.todoText, value: text })),
-        addTodo: () => dispatch(actions.addTodoItem()),
-      }))
-    );
+  ({ createProps$, dispatch }) =>
+    createProps$(keys.todoText)(([addTodoText]) => ({
+      addTodoText,
+      setAddTodoText: (text: string) => dispatch(actions.set({ key: keys.todoText, value: text })),
+      addTodo: () => dispatch(actions.addTodoItem()),
+    }));
 
 export default connect(AddTodo, createAddTodoProps);
