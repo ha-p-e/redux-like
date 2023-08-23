@@ -52,8 +52,8 @@ const create =
                   if (isSetUpdate(update)) store.set(update.key, update.value);
                   else store.del(update.key);
                 });
+                updates$.next(updates);
               }
-              updates$.next(updates);
             },
             error: (e: Error) => updates$.next(e),
             // do not complete subject
