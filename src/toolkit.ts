@@ -1,7 +1,7 @@
-import { DelUpdate, ReadonlyStore, SetUpdate, Store, StoreKey, StoreUpdate, isSetUpdate } from "./store";
+import { Observable, lastValueFrom } from "rxjs";
 import { Action, ActionCreator, ActionHandler } from "./action";
 import { Dispatcher } from "./dispatcher";
-import { Observable, lastValueFrom } from "rxjs";
+import { DelUpdate, ReadonlyStore, SetUpdate, Store, StoreKey, StoreUpdate, isSetUpdate } from "./store";
 
 // avoids leading "/" in path
 type Path<Parent extends string, Node extends string> = Parent extends "" ? Node : `${Parent}/${Node}`;
@@ -157,16 +157,18 @@ export const createActionHandlers = <T extends Record<string, ActionTypeNode>>(
 
 export const createActionHandlersCreator =
   <T extends Record<string, ActionTypeNode>>(handlers: T, parent: string = "") =>
-  (store: ReadonlyStore): ActionHandlers<T> =>
-    Object.fromEntries(
-      Object.entries(handlers).map(([k, v]) => {
-        if (typeof v === "object" && v !== null) {
-          return [k, createActionHandlers(store, v, `${parent}/${k}`)];
-        } else {
-          return [k, createActionHandler(store, `${parent}/${k}`, v)];
-        }
-      })
-    );
+  (store: ReadonlyStore): Record<string, ActionHandler<any>> =>
+    flatten(
+      Object.fromEntries(
+        Object.entries(handlers).map(([k, v]) => {
+          if (typeof v === "object" && v !== null) {
+            return [k, createActionHandlers(store, v, `${parent}/${k}`)];
+          } else {
+            return [k, createActionHandler(store, `${parent}/${k}`, v)];
+          }
+        })
+      )
+    ) as Record<string, ActionHandler<any>>;
 
 // Slice Helpers
 
@@ -216,6 +218,14 @@ const flatten = <T extends object>(obj: T): Flatten<T> => {
   return result;
 };
 
+export const initSlice =
+  (...actionHandlerCreators: ((store: Store) => Record<string, ActionHandler<any>>)[]) =>
+  (store: Store = Store.create()) => {
+    const handlers = actionHandlerCreators.reduce((acc, c) => ({ ...acc, ...c(store) }), {});
+    const [dispatch, updates$] = Dispatcher.create(store)(handlers);
+    return { store, dispatch, updates$ };
+  };
+
 export const createSlice = <
   StoreKeys extends Record<string, StoreKeyNode>,
   ActionHandlers extends Record<string, ActionTypeNode>
@@ -225,15 +235,9 @@ export const createSlice = <
 }) => {
   const keys = createStoreKeys(inputs.keys);
   const actions = createActionCreators(inputs.actions);
-  const handlersCreator = createActionHandlersCreator(inputs.actions);
-  const initSlice = (store: Store = Store.create()) => {
-    const handlers = handlersCreator(store);
-    const flattenedHandlers = flatten(handlers);
-    const [dispatch, updates$] = Dispatcher.create(store)(flattenedHandlers as Record<string, ActionHandler<any>>);
-    return { store, dispatch, updates$ };
-  };
-
-  return { keys, actions, initSlice };
+  const actionHandlerCreators = createActionHandlersCreator(inputs.actions);
+  const initializeSlice = initSlice(actionHandlerCreators);
+  return { keys, actions, actionHandlerCreators, initSlice: initializeSlice };
 };
 
 // Test Helpers

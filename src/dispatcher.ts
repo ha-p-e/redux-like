@@ -1,6 +1,6 @@
 import { EMPTY, Observable, Subject, from, map, of } from "rxjs";
-import { Store, StoreUpdate, isSetUpdate } from "./store";
 import { Action, ActionHandler, isAction } from "./action";
+import { Store, StoreUpdate, isSetUpdate } from "./store";
 
 export type Dispatcher<T = any> = (action: Action<T>) => void;
 

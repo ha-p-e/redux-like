@@ -1,5 +1,5 @@
-import { actions, keys } from "../app";
 import { PropCreator, connect } from "../../connect";
+import { actions, keys } from "../app";
 
 interface AddTodoProps {
   addTodoText: string;

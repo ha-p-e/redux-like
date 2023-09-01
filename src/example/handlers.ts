@@ -1,8 +1,8 @@
+import { nanoid } from "nanoid";
 import { of } from "rxjs";
 import { StoreKey } from "../store";
 import { ActionHandlerFunc } from "../toolkit";
 import { keys } from "./app";
-import { nanoid } from "nanoid";
 
 // rx handler example
 export const setHandler: ActionHandlerFunc<{ key: StoreKey<any>; value: any }> =

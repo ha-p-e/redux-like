@@ -19,3 +19,7 @@ export type ActionHandler<P, T extends string = string> = (
   | Promise<Action | StoreUpdate | StoreUpdate[]>
   | Observable<Action | StoreUpdate | StoreUpdate[]>
   | void;
+
+export const create = <P, T extends string>(type: T, payload: P): Action<P, T> => ({ type, payload });
+
+export const Action = { create };

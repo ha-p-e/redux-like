@@ -1,8 +1,8 @@
 import { FC, createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Observable, combineLatest, debounceTime, identity, map, of } from "rxjs";
-import { ReadonlyStore, StoreKey } from "./store";
-import { Dispatcher } from "./dispatcher";
 import { Action } from "./action";
+import { Dispatcher } from "./dispatcher";
+import { ReadonlyStore, StoreKey } from "./store";
 
 function useObservable<T>(observable: Observable<T>): T | undefined;
 function useObservable<T>(observable: Observable<T>, initialValue: T): T;
