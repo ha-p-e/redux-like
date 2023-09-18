@@ -1,6 +1,10 @@
 import { Observable, ReplaySubject } from "rxjs";
 export type StoreKey<T, K extends string = string> = { key: K; initialValue: T };
 
+export type Values<T> = {
+  [K in keyof T]: T[K] extends StoreKey<infer V, any> ? V : never;
+};
+
 type StoreValue<T> = {
   get(): T;
   get$(): Observable<T>;

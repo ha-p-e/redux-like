@@ -1,7 +1,7 @@
-import { Observable, lastValueFrom } from "rxjs";
+import { Observable, Subject, combineLatest, lastValueFrom, pairwise, takeUntil, takeWhile } from "rxjs";
 import { Action, ActionCreator, ActionHandler } from "./action";
 import { Dispatcher } from "./dispatcher";
-import { DelUpdate, ReadonlyStore, SetUpdate, Store, StoreKey, StoreUpdate, isSetUpdate } from "./store";
+import { DelUpdate, ReadonlyStore, SetUpdate, Store, StoreKey, StoreUpdate, Values, isSetUpdate } from "./store";
 
 // avoids leading "/" in path
 type Path<Parent extends string, Node extends string> = Parent extends "" ? Node : `${Parent}/${Node}`;
@@ -76,6 +76,33 @@ export const init = <T>(value: T): InitialValue<T> => ({ initialValue: value });
 
 // Actions Helpers
 
+type CancelToken = {
+  isCancelled: boolean;
+};
+
+const cancel =
+  (store: ReadonlyStore, action: Action, completed$: Observable<void>) =>
+  <T extends StoreKey<any>[]>(...keysToMonitor: [...T]) =>
+  (shouldCancel: (previous: Values<T>, current: Values<T>) => boolean): CancelToken => {
+    const token: CancelToken = { isCancelled: false };
+
+    (combineLatest(keysToMonitor.map((key) => store.get$(key))) as Observable<Values<T>>)
+      .pipe(
+        takeWhile(() => !token.isCancelled),
+        takeUntil(completed$),
+        pairwise()
+      )
+      .subscribe({
+        next: ([prev, curr]) => {
+          if (shouldCancel(prev, curr)) {
+            console.log("canceling:", action.type, action.payload);
+            token.isCancelled = true;
+          }
+        },
+      });
+    return token;
+  };
+
 type ActionHandlerHelper = {
   has: <T>(key: StoreKey<T>) => boolean;
   get: <T>(key: StoreKey<T>) => T;
@@ -83,6 +110,9 @@ type ActionHandlerHelper = {
   set: <T>(key: StoreKey<T>, value: T) => void;
   del: <T>(key: StoreKey<T>) => void;
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
+  cancel: <T extends StoreKey<any>[]>(
+    ...keysToMonitor: [...T]
+  ) => (shouldCancel: (previous: Values<T>, current: Values<T>) => boolean) => CancelToken;
 };
 
 export type ActionHandlerFunc<P = void> = (
@@ -127,8 +157,9 @@ export const createActionCreators = <T extends Record<string, ActionTypeNode>>(
 
 const createActionHandler =
   <P, T extends string>(store: ReadonlyStore, _: T, func: ActionHandlerFunc<P>): ActionHandler<P, T> =>
-  (action: Action<P, T>) =>
-    new Observable<Action | StoreUpdate | StoreUpdate<[]>>((subscriber) => {
+  (action: Action<P, T>) => {
+    const completed$ = new Subject<void>();
+    return new Observable<Action | StoreUpdate | StoreUpdate<[]>>((subscriber) => {
       const helper: ActionHandlerHelper = {
         has: (key) => store.has(key),
         get: (key) => store.get(key),
@@ -136,9 +167,25 @@ const createActionHandler =
         set: (key, value) => subscriber.next(Store.set(key, value)),
         del: (key) => subscriber.next(Store.del(key)),
         dispatch: (action) => subscriber.next(action),
+        cancel: cancel(store, action, completed$),
       };
-      func(action.payload)(helper);
+      const result = func(action.payload)(helper);
+      const dispose = () => {
+        subscriber.complete();
+        completed$.next();
+        completed$.complete();
+      };
+      if (result) {
+        if (result instanceof Observable) {
+          result.subscribe({ complete: () => dispose() });
+        } else if (result instanceof Promise) {
+          result.then(() => dispose());
+        }
+      } else {
+        dispose();
+      }
     });
+  };
 
 export const createActionHandlers = <T extends Record<string, ActionTypeNode>>(
   store: ReadonlyStore,
@@ -274,6 +321,7 @@ export const testActionHandler = async <P>(
     set: (key, value) => actual.push(Store.set(key, value)),
     del: (key) => actual.push(Store.del(key)),
     dispatch: (action) => actual.push(action),
+    cancel: () => () => ({ isCancelled: false }),
   };
   const result = payload ? handler(payload)(helper) : (handler as ActionHandlerFunc<void>)()(helper);
   if (result instanceof Observable) {

@@ -1,9 +1,8 @@
 import { ContextProvider } from "../connect";
-import { setHandler, addTodoItemHandler, completeTodoListHandler, delTodoItemHandler } from "./handlers";
-import { createSlice } from "../toolkit";
-import { init } from "../toolkit";
+import { createSlice, init } from "../toolkit";
 import AddTodo from "./components/addTodo";
 import TodoList from "./components/todoList";
+import { addTodoItemHandler, completeTodoListHandler, delTodoItemHandler, setHandler } from "./handlers";
 
 export interface Todo {
   key: string;
@@ -29,9 +28,11 @@ const { store, dispatch, updates$ } = initSlice();
 
 updates$.subscribe((update) => {
   if (update instanceof Error) console.log(update);
-  else if ("type" in update) console.log(`action: ${JSON.stringify(update)}`);
+  else if ("type" in update) console.log("dispatch:", update.type, update.payload);
   else if (Array.isArray(update)) {
-    console.log(`update: ${JSON.stringify(update)}`);
+    update.forEach((storeUpdate) =>
+      console.log(`${storeUpdate.action}:`, storeUpdate.key.key, "value" in storeUpdate ? storeUpdate.value : undefined)
+    );
     console.log("store:", store.snap());
   }
 });
