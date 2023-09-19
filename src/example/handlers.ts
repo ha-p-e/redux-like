@@ -29,7 +29,7 @@ export const addTodoItemHandler: ActionHandlerFunc = ({ get, set }) => {
 export const completeTodoListHandler: ActionHandlerFunc<string> = async ({ get, set, cancel }, todoKey) => {
   const item = await Promise.resolve(get(keys.todoItem(todoKey)));
   // cancel example
-  const token = cancel([keys.todoItem(todoKey)], () => true);
+  const token = cancel([keys.todoItem(todoKey)]);
   await delay(1000);
   if (!token.isCancelled && item) {
     set(keys.todoItem(todoKey), {

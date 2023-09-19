@@ -84,7 +84,7 @@ const cancel =
   (store: ReadonlyStore, action: Action, completed$: Observable<void>) =>
   <T extends StoreKey<any>[]>(
     keysToMonitor: T,
-    shouldCancel: (previous: Values<T>, current: Values<T>) => boolean
+    shouldCancel: (previous: Values<T>, current: Values<T>) => boolean = () => true
   ): CancelToken => {
     const token: CancelToken = { isCancelled: false };
 
@@ -114,7 +114,7 @@ type ActionHandlerHelper = {
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
   cancel: <T extends StoreKey<any>[]>(
     keysToMonitor: T,
-    shouldCancel: (previous: Values<T>, current: Values<T>) => boolean
+    shouldCancel?: (previous: Values<T>, current: Values<T>) => boolean
   ) => CancelToken;
 };
 
