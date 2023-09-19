@@ -16,13 +16,11 @@ const AddTodo = (props: AddTodoProps) => (
   </div>
 );
 
-const createAddTodoProps: PropCreator<AddTodoProps> =
-  () =>
-  ({ createProps$, dispatch }) =>
-    createProps$(keys.todoText)(([addTodoText]) => ({
-      addTodoText,
-      setAddTodoText: (text: string) => dispatch(actions.set({ key: keys.todoText, value: text })),
-      addTodo: () => dispatch(actions.addTodoItem()),
-    }));
+const createAddTodoProps: PropCreator<AddTodoProps> = ({ createProps$, dispatch }) =>
+  createProps$(keys.todoText)(([addTodoText]) => ({
+    addTodoText,
+    setAddTodoText: (text: string) => dispatch(actions.set({ key: keys.todoText, value: text })),
+    addTodo: () => dispatch(actions.addTodoItem()),
+  }));
 
 export default connect(AddTodo, createAddTodoProps);

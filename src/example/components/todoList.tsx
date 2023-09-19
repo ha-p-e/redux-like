@@ -15,12 +15,10 @@ const TodoList = (props: TodoListProps) => (
   </div>
 );
 
-const createTodoListProps: PropCreator<TodoListProps> =
-  () =>
-  ({ createProps$, dispatch }) =>
-    createProps$(keys.todoList)(([list]) => ({
-      todoList: list,
-      setTodoList: (list: string[]) => dispatch(actions.set({ key: keys.todoList, value: list })),
-    }));
+const createTodoListProps: PropCreator<TodoListProps> = ({ createProps$, dispatch }) =>
+  createProps$(keys.todoList)(([list]) => ({
+    todoList: list,
+    setTodoList: (list: string[]) => dispatch(actions.set({ key: keys.todoList, value: list })),
+  }));
 
 export default connect(TodoList, createTodoListProps);

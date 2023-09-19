@@ -21,13 +21,14 @@ const TodoItem = (props: TodoItemProps) => (
   </div>
 );
 
-const createTodoItemProps: PropCreator<TodoItemProps, { todoKey: string }> =
-  (props: { todoKey: string }) =>
-  ({ createProps$, dispatch }) =>
-    createProps$(keys.todoItem(props.todoKey))(([item]) => ({
-      item,
-      delete: () => dispatch(actions.delTodoItem(item.key)),
-      completed: () => dispatch(actions.completeTodoItem(item.key)),
-    }));
+const createTodoItemProps: PropCreator<TodoItemProps, { todoKey: string }> = (
+  { createProps$, dispatch },
+  props: { todoKey: string }
+) =>
+  createProps$(keys.todoItem(props.todoKey))(([item]) => ({
+    item,
+    delete: () => dispatch(actions.delTodoItem(item.key)),
+    completed: () => dispatch(actions.completeTodoItem(item.key)),
+  }));
 
 export default connect(TodoItem, createTodoItemProps);

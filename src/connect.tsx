@@ -52,16 +52,14 @@ const createPropCreatorHelper = (store: ReadonlyStore, dispatch: Dispatcher): Pr
       ),
 });
 
-export type PropCreator<T extends {}, P extends {} = {}> = (
-  props: P
-) => (helper: PropCreatorHelper) => Observable<T> | T;
+export type PropCreator<T extends {}, P extends {} = {}> = (helper: PropCreatorHelper, props: P) => Observable<T> | T;
 
 export const connect =
   <T extends {}, P extends {}>(Component: FC<T & P>, contextProps: PropCreator<T, P>): FC<P> =>
   (props: P) => {
     const { store, dispatch } = useContext(Context);
     const helper: PropCreatorHelper = useMemo(() => createPropCreatorHelper(store, dispatch), [store, dispatch]);
-    const connectedProps = useMemo(() => contextProps(props)(helper), [props, helper]);
+    const connectedProps = useMemo(() => contextProps(helper, props), [props, helper]);
     const observableProps = useObservable(connectedProps instanceof Observable ? connectedProps : of(connectedProps));
     return <>{observableProps && <Component {...{ ...observableProps, ...props }} />}</>;
   };

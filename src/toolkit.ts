@@ -82,8 +82,10 @@ type CancelToken = {
 
 const cancel =
   (store: ReadonlyStore, action: Action, completed$: Observable<void>) =>
-  <T extends StoreKey<any>[]>(...keysToMonitor: [...T]) =>
-  (shouldCancel: (previous: Values<T>, current: Values<T>) => boolean): CancelToken => {
+  <T extends StoreKey<any>[]>(
+    keysToMonitor: T,
+    shouldCancel: (previous: Values<T>, current: Values<T>) => boolean
+  ): CancelToken => {
     const token: CancelToken = { isCancelled: false };
 
     (combineLatest(keysToMonitor.map((key) => store.get$(key))) as Observable<Values<T>>)
@@ -111,13 +113,15 @@ type ActionHandlerHelper = {
   del: <T>(key: StoreKey<T>) => void;
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
   cancel: <T extends StoreKey<any>[]>(
-    ...keysToMonitor: [...T]
-  ) => (shouldCancel: (previous: Values<T>, current: Values<T>) => boolean) => CancelToken;
+    keysToMonitor: T,
+    shouldCancel: (previous: Values<T>, current: Values<T>) => boolean
+  ) => CancelToken;
 };
 
 export type ActionHandlerFunc<P = void> = (
+  helper: ActionHandlerHelper,
   payload: P
-) => (helper: ActionHandlerHelper) => void | Promise<unknown> | Observable<unknown>;
+) => void | Promise<unknown> | Observable<unknown>;
 
 export type ActionTypeNode = { [key: string]: ActionTypeNode } | ActionHandlerFunc<any>;
 
@@ -169,7 +173,7 @@ const createActionHandler =
         dispatch: (action) => subscriber.next(action),
         cancel: cancel(store, action, completed$),
       };
-      const result = func(action.payload)(helper);
+      const result = func(helper, action.payload);
       const dispose = () => {
         subscriber.complete();
         completed$.next();
@@ -321,9 +325,9 @@ export const testActionHandler = async <P>(
     set: (key, value) => actual.push(Store.set(key, value)),
     del: (key) => actual.push(Store.del(key)),
     dispatch: (action) => actual.push(action),
-    cancel: () => () => ({ isCancelled: false }),
+    cancel: ([]) => ({ isCancelled: false }),
   };
-  const result = payload ? handler(payload)(helper) : (handler as ActionHandlerFunc<void>)()(helper);
+  const result = payload ? handler(helper, payload) : (handler as ActionHandlerFunc<void>)(helper);
   if (result instanceof Observable) {
     await lastValueFrom(result).then(() => actual);
   } else if (result instanceof Promise) {
