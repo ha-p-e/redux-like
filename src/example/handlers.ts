@@ -4,8 +4,6 @@ import { StoreKey } from "../store";
 import { ActionHandlerFunc } from "../toolkit";
 import { keys } from "./app";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 // rx handler example
 export const setHandler: ActionHandlerFunc<{ key: StoreKey<any>; value: any }> = async ({ set }, { key, value }) =>
   of(set(key, value));
@@ -26,12 +24,15 @@ export const addTodoItemHandler: ActionHandlerFunc = ({ get, set }) => {
 };
 
 // async handler example
-export const completeTodoListHandler: ActionHandlerFunc<string> = async ({ get, set, cancel }, todoKey) => {
+export const completeTodoListHandler: ActionHandlerFunc<string> = async (
+  { get, set, cancelIfChanged, isCancelled },
+  todoKey
+) => {
   const item = await Promise.resolve(get(keys.todoItem(todoKey)));
   // cancel example
-  const token = cancel([keys.todoItem(todoKey)]);
-  await delay(1000);
-  if (!token.isCancelled && item) {
+  cancelIfChanged([keys.todoItem(todoKey)]);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  if (!isCancelled() && item) {
     set(keys.todoItem(todoKey), {
       ...item,
       completed: !item.completed,

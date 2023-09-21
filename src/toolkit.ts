@@ -80,14 +80,12 @@ type CancelToken = {
   isCancelled: boolean;
 };
 
-const cancel =
-  (store: ReadonlyStore, action: Action, completed$: Observable<void>) =>
+const cancelIfChanged =
+  (store: ReadonlyStore, action: Action, token: CancelToken, completed$: Observable<void>) =>
   <T extends StoreKey<any>[]>(
     keysToMonitor: T,
     shouldCancel: (previous: Values<T>, current: Values<T>) => boolean = () => true
-  ): CancelToken => {
-    const token: CancelToken = { isCancelled: false };
-
+  ) => {
     (combineLatest(keysToMonitor.map((key) => store.get$(key))) as Observable<Values<T>>)
       .pipe(
         takeWhile(() => !token.isCancelled),
@@ -102,7 +100,6 @@ const cancel =
           }
         },
       });
-    return token;
   };
 
 type ActionHandlerHelper = {
@@ -112,10 +109,11 @@ type ActionHandlerHelper = {
   set: <T>(key: StoreKey<T>, value: T) => void;
   del: <T>(key: StoreKey<T>) => void;
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
-  cancel: <T extends StoreKey<any>[]>(
+  cancelIfChanged: <T extends StoreKey<any>[]>(
     keysToMonitor: T,
     shouldCancel?: (previous: Values<T>, current: Values<T>) => boolean
-  ) => CancelToken;
+  ) => void;
+  isCancelled: () => boolean;
 };
 
 export type ActionHandlerFunc<P = void> = (
@@ -162,6 +160,7 @@ export const createActionCreators = <T extends Record<string, ActionTypeNode>>(
 const createActionHandler =
   <P, T extends string>(store: ReadonlyStore, _: T, func: ActionHandlerFunc<P>): ActionHandler<P, T> =>
   (action: Action<P, T>) => {
+    const token: CancelToken = { isCancelled: false };
     const completed$ = new Subject<void>();
     return new Observable<Action | StoreUpdate | StoreUpdate<[]>>((subscriber) => {
       const helper: ActionHandlerHelper = {
@@ -171,7 +170,8 @@ const createActionHandler =
         set: (key, value) => subscriber.next(Store.set(key, value)),
         del: (key) => subscriber.next(Store.del(key)),
         dispatch: (action) => subscriber.next(action),
-        cancel: cancel(store, action, completed$),
+        cancelIfChanged: cancelIfChanged(store, action, token, completed$),
+        isCancelled: () => token.isCancelled,
       };
       const result = func(helper, action.payload);
       const dispose = () => {
@@ -325,7 +325,8 @@ export const testActionHandler = async <P>(
     set: (key, value) => actual.push(Store.set(key, value)),
     del: (key) => actual.push(Store.del(key)),
     dispatch: (action) => actual.push(action),
-    cancel: ([]) => ({ isCancelled: false }),
+    cancelIfChanged: () => {},
+    isCancelled: () => false,
   };
   const result = payload ? handler(helper, payload) : (handler as ActionHandlerFunc<void>)(helper);
   if (result instanceof Observable) {
