@@ -29,6 +29,7 @@ export type StoreUpdateAction = "set" | "del";
 export type StoreUpdate<T = any> = {
   key: StoreKey<T>;
   action: StoreUpdateAction;
+  source: string | undefined;
 };
 
 export type SetUpdate<T> = StoreUpdate<T> & { value: T; action: "set" };
@@ -97,15 +98,17 @@ export const create = () => new StoreImpl() as Store;
 
 export const key = <T>(key: string, initialValue: T): StoreKey<T> => ({ key, initialValue });
 
-export const set = <T>(key: StoreKey<T>, value: T): SetUpdate<T> => ({
+export const set = <T>(key: StoreKey<T>, value: T, source: string | undefined = undefined): SetUpdate<T> => ({
   key,
   value,
   action: "set",
+  source,
 });
 
-export const del = <T>(key: StoreKey<T>): DelUpdate<T> => ({
+export const del = <T>(key: StoreKey<T>, source: string | undefined = undefined): DelUpdate<T> => ({
   key,
   action: "del",
+  source,
 });
 
 export const Store = { create, key, set, del };

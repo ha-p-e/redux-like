@@ -31,7 +31,11 @@ updates$.subscribe((update) => {
   else if ("type" in update) console.log("dispatch:", update.type, update.payload);
   else if (Array.isArray(update)) {
     update.forEach((storeUpdate) =>
-      console.log(`${storeUpdate.action}:`, storeUpdate.key.key, "value" in storeUpdate ? storeUpdate.value : undefined)
+      console.log(
+        `${storeUpdate.source}.${storeUpdate.action}:`,
+        storeUpdate.key.key,
+        "value" in storeUpdate ? storeUpdate.value : undefined
+      )
     );
     console.log("store:", store.snap());
   }
