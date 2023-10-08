@@ -58,7 +58,10 @@ export const connect =
   <T extends {}, P extends {}>(Component: FC<T & P>, contextProps: PropCreator<T, P>): FC<P> =>
   (props: P) => {
     const { store, dispatch } = useContext(Context);
-    const helper: PropCreatorHelper = useMemo(() => createPropCreatorHelper(store, dispatch), [store, dispatch]);
+    const helper: PropCreatorHelper = useMemo(() => {
+      const dispatchWithTrace = (action: Action) => dispatch({ ...action, trace: [Component.name, ...action.trace] });
+      return createPropCreatorHelper(store, dispatchWithTrace);
+    }, [store, dispatch]);
     const connectedProps = useMemo(() => contextProps(helper, props), [props, helper]);
     const observableProps = useObservable(connectedProps instanceof Observable ? connectedProps : of(connectedProps));
     return <>{observableProps && <Component {...{ ...observableProps, ...props }} />}</>;

@@ -29,16 +29,14 @@ export type StoreUpdateAction = "set" | "del";
 export type StoreUpdate<T = any> = {
   key: StoreKey<T>;
   action: StoreUpdateAction;
-  source: string | undefined;
+  trace: string[];
 };
 
 export type SetUpdate<T> = StoreUpdate<T> & { value: T; action: "set" };
 
 export type DelUpdate<T> = StoreUpdate<T> & { action: "del" };
 
-export function isSetUpdate<T>(update: StoreUpdate<T>): update is SetUpdate<T> {
-  return update.action === "set";
-}
+export const isSetUpdate = <T>(update: StoreUpdate<T>): update is SetUpdate<T> => update.action === "set";
 
 class StoreValueImpl<T> implements StoreValue<T> {
   private readonly updates$ = new ReplaySubject<T>(1);
@@ -98,17 +96,17 @@ export const create = () => new StoreImpl() as Store;
 
 export const key = <T>(key: string, initialValue: T): StoreKey<T> => ({ key, initialValue });
 
-export const set = <T>(key: StoreKey<T>, value: T, source: string | undefined = undefined): SetUpdate<T> => ({
+export const set = <T>(key: StoreKey<T>, value: T, trace: string[] = []): SetUpdate<T> => ({
   key,
   value,
   action: "set",
-  source,
+  trace,
 });
 
-export const del = <T>(key: StoreKey<T>, source: string | undefined = undefined): DelUpdate<T> => ({
+export const del = <T>(key: StoreKey<T>, trace: string[] = []): DelUpdate<T> => ({
   key,
   action: "del",
-  source,
+  trace,
 });
 
 export const Store = { create, key, set, del };

@@ -141,7 +141,7 @@ type ActionHandlers<T extends ActionTypeNode, Parent extends string = ""> = {
 
 const createActionCreator =
   <P, T extends string>(type: T, _: ActionHandlerFunc<P>): ((payload: P) => Action<P, T>) =>
-  (payload: P): Action<P, T> => ({ type, payload });
+  (payload: P): Action<P, T> => ({ type, payload, trace: [] });
 
 export const createActionCreators = <T extends Record<string, ActionTypeNode>>(
   handlers: T,
@@ -167,9 +167,9 @@ const createActionHandler =
         has: (key) => store.has(key),
         get: (key) => store.get(key),
         get$: (key) => store.get$(key),
-        set: (key, value) => subscriber.next(Store.set(key, value, action.type)),
-        del: (key) => subscriber.next(Store.del(key, action.type)),
-        dispatch: (action) => subscriber.next(action),
+        set: (key, value) => subscriber.next(Store.set(key, value, [action.type, ...action.trace])),
+        del: (key) => subscriber.next(Store.del(key, [action.type, ...action.trace])),
+        dispatch: (act) => subscriber.next({ ...act, trace: [action.type, ...action.trace] }),
         cancelIfChanged: cancelIfChanged(store, action, token, completed$),
         isCancelled: () => token.isCancelled,
       };
@@ -293,6 +293,11 @@ export const createSlice = <
 
 // Test Helpers
 
+function removeProperty<T, K extends keyof T>(obj: T, prop: K): Omit<T, K> {
+  const { [prop]: omitted, ...rest } = obj;
+  return rest;
+}
+
 type ActionHandlerTestHelper = {
   set: <T>(key: StoreKey<T>, value: T) => SetUpdate<T>;
   del: <T>(key: StoreKey<T>) => DelUpdate<T>;
@@ -334,6 +339,7 @@ export const testActionHandler = async <P>(
   } else if (result instanceof Promise) {
     await result.then(() => actual);
   }
-  if (expected) expect(actual).toStrictEqual(expected);
+  const removeTrace = (actionOrUpdate: Action | StoreUpdate) => removeProperty(actionOrUpdate, "trace");
+  if (expected) expect(actual.map(removeTrace)).toStrictEqual(expected.map(removeTrace));
   if (asserts) asserts(actual);
 };

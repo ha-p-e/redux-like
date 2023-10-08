@@ -28,13 +28,14 @@ const { store, dispatch, updates$ } = initSlice();
 
 updates$.subscribe((update) => {
   if (update instanceof Error) console.log(update);
-  else if ("type" in update) console.log("dispatch:", update.type, update.payload);
+  else if ("type" in update) console.log("dispatch:", update.type, update.payload, update.trace);
   else if (Array.isArray(update)) {
     update.forEach((storeUpdate) =>
       console.log(
-        `${storeUpdate.source}.${storeUpdate.action}:`,
+        `${storeUpdate.action}:`,
         storeUpdate.key.key,
-        "value" in storeUpdate ? storeUpdate.value : undefined
+        "value" in storeUpdate ? storeUpdate.value : undefined,
+        storeUpdate.trace
       )
     );
     console.log("store:", store.snap());
