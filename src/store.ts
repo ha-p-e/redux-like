@@ -32,6 +32,8 @@ export type StoreUpdate<T = any> = {
   trace: string[];
 };
 
+export type StoreKeyValue<T> = { key: StoreKey<T>; value: T };
+
 export type SetUpdate<T> = StoreUpdate<T> & { value: T; action: "set" };
 
 export type DelUpdate<T> = StoreUpdate<T> & { action: "del" };
@@ -109,4 +111,6 @@ export const del = <T>(key: StoreKey<T>, trace: string[] = []): DelUpdate<T> => 
   trace,
 });
 
-export const Store = { create, key, set, del };
+export const keyValue = <T>(key: StoreKey<T>, value: T): StoreKeyValue<T> => ({ key, value });
+
+export const Store = { create, key, set, del, keyValue };

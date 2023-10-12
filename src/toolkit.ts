@@ -1,7 +1,17 @@
 import { Observable, Subject, combineLatest, lastValueFrom, pairwise, takeUntil, takeWhile } from "rxjs";
 import { Action, ActionCreator, ActionHandler } from "./action";
 import { Dispatcher } from "./dispatcher";
-import { DelUpdate, ReadonlyStore, SetUpdate, Store, StoreKey, StoreUpdate, Values, isSetUpdate } from "./store";
+import {
+  DelUpdate,
+  ReadonlyStore,
+  SetUpdate,
+  Store,
+  StoreKey,
+  StoreKeyValue,
+  StoreUpdate,
+  Values,
+  isSetUpdate,
+} from "./store";
 
 // avoids leading "/" in path
 type Path<Parent extends string, Node extends string> = Parent extends "" ? Node : `${Parent}/${Node}`;
@@ -220,6 +230,12 @@ export const createActionHandlersCreator =
         })
       )
     ) as Record<string, ActionHandler<any>>;
+
+// Store Handlers
+
+export const setHandler: ActionHandlerFunc<StoreKeyValue<any>> = ({ set }, { key, value }) => set(key, value);
+
+export const delHandler: ActionHandlerFunc<StoreKey<any>> = ({ del }, key) => del(key);
 
 // Slice Helpers
 
