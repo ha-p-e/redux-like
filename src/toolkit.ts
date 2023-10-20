@@ -39,7 +39,7 @@ type StoreKeys<T extends StoreKeyNode, Parent extends string = ""> = {
 const isInitialValue = <T>(value: any): value is InitialValue<T> =>
   typeof value === "object" && value !== null && "initialValue" in value;
 
-export const createStoreKeys = <T extends Record<string, StoreKeyNode>>(
+export const createSliceKeys = <T extends Record<string, StoreKeyNode>>(
   storeKeys: T,
   parent: string = ""
 ): StoreKeys<T> =>
@@ -60,7 +60,7 @@ export const createStoreKeys = <T extends Record<string, StoreKeyNode>>(
             }
             // typeof v == (node: string) => Record<string, NodeType>
             else if (typeof result === "object" && result !== null) {
-              return createStoreKeys(result, parent === "" ? `${k}/${node}` : `${parent}/${k}/${node}`);
+              return createSliceKeys(result, parent === "" ? `${k}/${node}` : `${parent}/${k}/${node}`);
             }
             // should not happen given the input type constraints
             throw new Error(`Invalid return type ${typeof result}`);
@@ -74,7 +74,7 @@ export const createStoreKeys = <T extends Record<string, StoreKeyNode>>(
       }
       // typeof v == Record<string, NodeType>
       else if (typeof v === "object" && v !== null) {
-        return [k, createStoreKeys(v, parent === "" ? k : `${parent}/${k}`)];
+        return [k, createSliceKeys(v, parent === "" ? k : `${parent}/${k}`)];
       } else {
         // should not happen given the input type constraints
         throw new Error(`Invalid type ${typeof v}`);
@@ -231,6 +231,12 @@ export const createActionHandlersCreator =
       )
     ) as Record<string, ActionHandler<any>>;
 
+export const createSliceActions = <ActionHandlers extends Record<string, ActionTypeNode>>(actions: ActionHandlers) => {
+  const actionCreators = createActionCreators(actions);
+  const actionHandlerCreators = createActionHandlersCreator(actions);
+  return { actions: actionCreators, actionHandlerCreators };
+};
+
 // Store Handlers
 
 export const setHandler: ActionHandlerFunc<StoreKeyValue<any>> = ({ set }, { key, value }) => set(key, value);
@@ -300,9 +306,8 @@ export const createSlice = <
   keys: StoreKeys;
   actions: ActionHandlers;
 }) => {
-  const keys = createStoreKeys(inputs.keys);
-  const actions = createActionCreators(inputs.actions);
-  const actionHandlerCreators = createActionHandlersCreator(inputs.actions);
+  const keys = createSliceKeys(inputs.keys);
+  const { actions, actionHandlerCreators } = createSliceActions(inputs.actions);
   const initializeSlice = initSlice(actionHandlerCreators);
   return { keys, actions, actionHandlerCreators, initSlice: initializeSlice };
 };
