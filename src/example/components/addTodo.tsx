@@ -9,7 +9,7 @@ interface AddTodoProps {
 
 const AddTodo = (props: AddTodoProps) => (
   <div>
-    <input type="text" value={props.addTodoText} onChange={(e) => props.setAddTodoText(e.target.value)} />
+    <input type="text" value={props.addTodoText} onChange={e => props.setAddTodoText(e.target.value)} />
     <button onClick={() => props.addTodo()} disabled={props.addTodoText === ""}>
       +
     </button>

@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { of } from "rxjs";
 import { StoreKey } from "../store";
-import { ActionHandlerFunc } from "../toolkit";
+import { ActionHandlerFunc } from "../toolkit/actionCommon";
 import { keys } from "./app";
 
 // rx handler example
@@ -31,7 +31,7 @@ export const completeTodoListHandler: ActionHandlerFunc<string> = async (
   const item = await Promise.resolve(get(keys.todoItem(todoKey)));
   // cancel example
   cancelIfChanged([keys.todoItem(todoKey)]);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   if (!isCancelled() && item) {
     set(keys.todoItem(todoKey), {
       ...item,
@@ -44,6 +44,6 @@ export const delTodoItemHandler: ActionHandlerFunc<string> = ({ get, set, del },
   del(keys.todoItem(todoKey));
   set(
     keys.todoList,
-    (get(keys.todoList) ?? []).filter((i) => i !== todoKey)
+    (get(keys.todoList) ?? []).filter(i => i !== todoKey)
   );
 };

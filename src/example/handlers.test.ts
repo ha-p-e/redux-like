@@ -1,4 +1,4 @@
-import { testActionHandler } from "../toolkit";
+import { testActionHandler } from "../toolkit/test";
 import { keys } from "./app";
 import { addTodoItemHandler, completeTodoListHandler, delTodoItemHandler, setHandler } from "./handlers";
 
