@@ -1,8 +1,8 @@
 import { nanoid } from "nanoid";
 import { of } from "rxjs";
 import { StoreKey } from "../store";
-import { ActionHandlerFunc } from "../toolkit/actionCommon";
-import { keys } from "./app";
+import { ActionHandlerFunc, createActionHandlerCreators, handler } from "../toolkit";
+import { actionTypes, keys } from "./slice";
 
 // rx handler example
 export const setHandler: ActionHandlerFunc<{ key: StoreKey<any>; value: any }> = async ({ set }, { key, value }) =>
@@ -47,3 +47,11 @@ export const delTodoItemHandler: ActionHandlerFunc<string> = ({ get, set, del },
     (get(keys.todoList) ?? []).filter(i => i !== todoKey)
   );
 };
+
+export const actionHandlerCreators = () =>
+  createActionHandlerCreators(
+    handler(actionTypes.set, setHandler),
+    handler(actionTypes.addTodoItem, addTodoItemHandler),
+    handler(actionTypes.completeTodoItem, completeTodoListHandler),
+    handler(actionTypes.delTodoItem, delTodoItemHandler)
+  );

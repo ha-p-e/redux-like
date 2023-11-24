@@ -1,6 +1,6 @@
-import { testActionHandler } from "../toolkit/test";
-import { keys } from "./app";
+import { testActionHandler } from "../toolkit";
 import { addTodoItemHandler, completeTodoListHandler, delTodoItemHandler, setHandler } from "./handlers";
+import { keys } from "./slice";
 
 const itemKey = "key";
 jest.mock("nanoid", () => ({ nanoid: () => itemKey }));

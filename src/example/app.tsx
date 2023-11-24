@@ -1,36 +1,16 @@
 import { ContextProvider } from "../connect";
-import { createSlice, init } from "../toolkit";
+import { initSlice } from "../toolkit";
 import AddTodo from "./components/addTodo";
 import TodoList from "./components/todoList";
-import { addTodoItemHandler, completeTodoListHandler, delTodoItemHandler, setHandler } from "./handlers";
+import { actionHandlerCreators } from "./handlers";
 
-export interface Todo {
-  key: string;
-  description: string;
-  completed: boolean;
-}
+const { store, dispatch, updates$ } = initSlice(actionHandlerCreators())();
 
-export const { keys, actions, initSlice } = createSlice({
-  keys: {
-    todoText: init(""),
-    todoList: init([] as string[]),
-    todoItem: (key: string) => init<Todo>({ key, description: "", completed: false }),
-  },
-  actions: {
-    set: setHandler,
-    addTodoItem: addTodoItemHandler,
-    completeTodoItem: completeTodoListHandler,
-    delTodoItem: delTodoItemHandler,
-  },
-});
-
-const { store, dispatch, updates$ } = initSlice();
-
-updates$.subscribe((update) => {
+updates$.subscribe(update => {
   if (update instanceof Error) console.log(update);
   else if ("type" in update) console.log("dispatch:", update.type, update.payload, update.trace);
   else if (Array.isArray(update)) {
-    update.forEach((storeUpdate) =>
+    update.forEach(storeUpdate =>
       console.log(
         `${storeUpdate.action}:`,
         storeUpdate.key.key,

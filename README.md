@@ -79,7 +79,11 @@ It allows function components to access state through props easily, without the 
 
 ### Toolkit
 
-Similar to [Redux Toolkit](https://redux-toolkit.js.org/), `toolkit.ts` provides helper functions to simplify the workflow. `createSlice` takes in `storeKeys`, `actionHandlers` and returns typesafe keys and actions.
+Similar to [Redux Toolkit](https://redux-toolkit.js.org/), `toolkit.ts` provides helper functions to simplify the workflow.
+
+#### Slice
+
+`createSlice` takes in `storeKeys`, `actionHandlers` and returns typesafe keys and actions.
 
 ```ts
 const { keys, actions, ... } = createSlice(
@@ -91,11 +95,35 @@ const { keys, actions, ... } = createSlice(
       ...
     },
     actions: {
-      action: (payload: number) => ({ get, get$, set, dispatch, ... }) => {...}
+      action: payload<number>()
       ...
     }
   }
 )
 ```
 
-This will generate a typesafe `` StoreKey<number,`path/key`> `` and set that key in the store to `123`, a generate typesafe `` Action<number, `action`> `` and `` ActionHandler<number, `action`> ``.
+This will generate a typesafe `StoreKey<number,"path/key">` and set that key in the store to `123`, a generate typesafe `Action<number, "action">` creator function.
+
+#### ActionHandlerFunc
+
+Instead of defining [`ActionHandler`](#actionhandler), [`ActionHandlerFunc`](#actionhandlerfunc) can be defined instead, which provides built in helper functions to access the store, dispatch further actions, and handle cancelation.
+
+```ts
+const handler: ActionHandlerFunc<number> = ({ get, get$, set, dispatch, cancelIfChanged, isCancelled }, payload) => {...}
+```
+
+#### Testing
+
+`testActionHandler` makes testing [`ActionHandlerFunc`](#actionhandlerfunc) easier by:
+
+1. providing helpers to easily setup a store and specify expected updates
+1. simplifying testing of `async` and `Observable` handlers
+
+```ts
+testActionHandler(({ set, del }) => ({
+    setup: [set(keys.todoList, ["1", "2"])],
+    handler: delTodoItemHandler,
+    payload: "1",
+    expected: [del(keys.todoItem("1")), set(keys.todoList, ["2"])],
+  })
+```

@@ -1,5 +1,6 @@
 import { connect, PropCreator } from "../../connect";
-import { actions, keys, Todo } from "../app";
+import { actions, keys } from "../slice";
+import { Todo } from "../types";
 
 interface TodoItemProps {
   item: Todo;

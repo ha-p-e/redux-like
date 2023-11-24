@@ -1,5 +1,5 @@
 import { PropCreator, connect } from "../../connect";
-import { actions, keys } from "../app";
+import { actions, keys } from "../slice";
 import TodoItem from "./todoItem";
 
 interface TodoListProps {
@@ -9,9 +9,9 @@ interface TodoListProps {
 
 const TodoList = (props: TodoListProps) => (
   <div>
-    {props.todoList.map((key) => {
-      return <TodoItem key={key} todoKey={key} />;
-    })}
+    {props.todoList.map(key => (
+      <TodoItem key={key} todoKey={key} />
+    ))}
   </div>
 );
 
