@@ -113,7 +113,7 @@ type ActionHandlerHelper = {
   del: <T>(key: StoreKey<T>) => void;
   dispatch: <P, T extends string>(action: Action<P, T>) => void;
   cancelIfChanged: <T extends StoreKey<any>[]>(
-    keysToMonitor: T,
+    keysToMonitor: [...T],
     shouldCancel?: (previous: Values<T>, current: Values<T>) => boolean
   ) => void;
   isCancelled: () => boolean;
