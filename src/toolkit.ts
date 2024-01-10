@@ -267,6 +267,7 @@ function removeProperty<T, K extends keyof T>(obj: T, prop: K): Omit<T, K> {
 type ActionHandlerTestHelper = {
   set: <T>(key: StoreKey<T>, value: T) => SetUpdate<T>;
   del: <T>(key: StoreKey<T>) => DelUpdate<T>;
+  dispatch: (action: Action) => Action;
 };
 
 export const testActionHandler = async <P>(
@@ -282,6 +283,7 @@ export const testActionHandler = async <P>(
   const { store, setup, handler, payload, expected, asserts } = f({
     set: (key, value) => Store.set(key, value),
     del: key => Store.del(key),
+    dispatch: action => action,
   });
   const definedStore = store ?? Store.create();
   (setup ?? []).forEach(update => {
