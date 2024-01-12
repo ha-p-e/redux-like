@@ -1,10 +1,10 @@
-import { PropCreator, connect } from "../../connect";
-import { actions, keys } from "../slice";
-import TodoItem from "./todoItem";
+import { PropCreator, connect } from '../../connect'
+import { actions, keys } from '../slice'
+import TodoItem from './todoItem'
 
 interface TodoListProps {
-  todoList: string[];
-  setTodoList: (list: string[]) => void;
+  todoList: string[]
+  setTodoList: (list: string[]) => void
 }
 
 const TodoList = (props: TodoListProps) => (
@@ -13,12 +13,12 @@ const TodoList = (props: TodoListProps) => (
       <TodoItem key={key} todoKey={key} />
     ))}
   </div>
-);
+)
 
 const createTodoListProps: PropCreator<TodoListProps> = ({ createProps$, dispatch }) =>
   createProps$(keys.todoList)(([list]) => ({
     todoList: list,
-    setTodoList: (list: string[]) => dispatch(actions.set({ key: keys.todoList, value: list })),
-  }));
+    setTodoList: (list: string[]) => dispatch(actions.set({ key: keys.todoList, value: list }))
+  }))
 
-export default connect(TodoList, createTodoListProps);
+export default connect(TodoList, createTodoListProps)

@@ -1,43 +1,43 @@
-import { testActionHandler } from "../toolkit";
-import { addTodoItemHandler, completeTodoListHandler, delTodoItemHandler, setHandler } from "./handlers";
-import { keys } from "./slice";
+import { testActionHandler } from '../toolkit'
+import { addTodoItemHandler, completeTodoListHandler, delTodoItemHandler, setHandler } from './handlers'
+import { keys } from './slice'
 
-const itemKey = "key";
-jest.mock("nanoid", () => ({ nanoid: () => itemKey }));
+const itemKey = 'key'
+jest.mock('nanoid', () => ({ nanoid: () => itemKey }))
 
-test("setHandler", () =>
+test('setHandler', () =>
   testActionHandler(({ set }) => ({
     handler: setHandler,
-    payload: { key: keys.todoText, value: "text" },
-    expected: [set(keys.todoText, "text")],
-  })));
+    payload: { key: keys.todoText, value: 'text' },
+    expected: [set(keys.todoText, 'text')]
+  })))
 
-test("addTodoItemHandler", () =>
+test('addTodoItemHandler', () =>
   testActionHandler(({ set }) => ({
     handler: addTodoItemHandler,
     expected: [
       set(keys.todoItem(itemKey), {
         key: itemKey,
-        description: "",
-        completed: false,
+        description: '',
+        completed: false
       }),
       set(keys.todoList, [itemKey]),
-      set(keys.todoText, ""),
-    ],
-  })));
+      set(keys.todoText, '')
+    ]
+  })))
 
-test("completeTodoListHandler", () =>
+test('completeTodoListHandler', () =>
   testActionHandler(({ set }) => ({
-    setup: [set(keys.todoItem("1"), { key: "1", description: "", completed: false })],
+    setup: [set(keys.todoItem('1'), { key: '1', description: '', completed: false })],
     handler: completeTodoListHandler,
-    payload: "1",
-    expected: [set(keys.todoItem("1"), { key: "1", description: "", completed: true })],
-  })));
+    payload: '1',
+    expected: [set(keys.todoItem('1'), { key: '1', description: '', completed: true })]
+  })))
 
-test("delTodoItemHandler", () =>
+test('delTodoItemHandler', () =>
   testActionHandler(({ set, del }) => ({
-    setup: [set(keys.todoList, ["1", "2"])],
+    setup: [set(keys.todoList, ['1', '2'])],
     handler: delTodoItemHandler,
-    payload: "1",
-    expected: [del(keys.todoItem("1")), set(keys.todoList, ["2"])],
-  })));
+    payload: '1',
+    expected: [del(keys.todoItem('1')), set(keys.todoList, ['2'])]
+  })))
