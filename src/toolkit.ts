@@ -1,5 +1,5 @@
 import { Observable, Subject, combineLatest, lastValueFrom, pairwise, takeUntil, takeWhile } from 'rxjs'
-import { Action, ActionHandler } from './action'
+import { Action, ActionHandler, isAction } from './action'
 import { Dispatcher } from './dispatcher'
 import {
   DelUpdate,
@@ -267,6 +267,12 @@ function removeProperty<T, K extends keyof T>(obj: T, prop: K): Omit<T, K> {
   return rest
 }
 
+function serializePayloadIfFunction(result: Action | StoreUpdate) {
+  return isAction(result) && typeof result.payload === 'function'
+    ? Action.create(result.type, JSON.stringify(result))
+    : result
+}
+
 type ActionHandlerTestHelper = {
   set: <T>(key: StoreKey<T>, value: T) => SetUpdate<T>
   del: <T>(key: StoreKey<T>) => DelUpdate<T>
@@ -310,7 +316,14 @@ export const testActionHandler = async <P>(
   } else if (result instanceof Promise) {
     await result.then(() => actual)
   }
-  const removeTrace = (actionOrUpdate: Action | StoreUpdate) => removeProperty(actionOrUpdate, 'trace')
-  if (expected) expect(actual.map(removeTrace)).toStrictEqual(expected.map(removeTrace))
+  const clean = (actionOrUpdate: Action | StoreUpdate) => {
+    // avoids "Received: serializes to the same string" errors
+    const cleanedPayload = serializePayloadIfFunction(actionOrUpdate)
+    // no need to compare trace in tests
+    return removeProperty(cleanedPayload, 'trace')
+  }
+  if (expected) {
+    expect(actual.map(clean)).toStrictEqual(expected.map(clean))
+  }
   if (asserts) asserts(actual)
 }

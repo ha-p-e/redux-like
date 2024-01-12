@@ -61,6 +61,7 @@ const createPropCreatorHelper = (
 export type PropCreator<T extends {}, P extends {} = {}> = (helper: PropCreatorHelper, props: P) => Observable<T> | T
 
 export const connect = <T extends {}, P extends {}>(Component: FC<T & P>, contextProps: PropCreator<T, P>) =>
+  // memo to avoid re-rendering when parent component re-renders
   memo((props: P) => {
     const { store, dispatch } = useContext(Context)
     const unmountCallback = useRef<() => void>(() => {})
