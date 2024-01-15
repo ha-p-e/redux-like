@@ -262,15 +262,26 @@ export const createSlice = <
 
 // Test Helpers
 
-function removeProperty<T, K extends keyof T>(obj: T, prop: K): Omit<T, K> {
+const removeProperty = <T, K extends keyof T>(obj: T, prop: K): Omit<T, K> => {
   const { [prop]: omitted, ...rest } = obj
   return rest
 }
 
-function serializePayloadIfFunction(result: Action | StoreUpdate) {
-  return isAction(result) && typeof result.payload === 'function'
-    ? Action.create(result.type, JSON.stringify(result))
-    : result
+const seralizeFunctions = <T extends object>(o: T): any =>
+  Object.fromEntries(
+    Object.entries(o).map(([k, v]) => [
+      k,
+      typeof v === 'function' ? JSON.stringify(v) : typeof v === 'object' ? seralizeFunctions(v) : v
+    ])
+  )
+
+const serializePayloadIfFunction = (result: Action | StoreUpdate) => {
+  if (isAction(result)) {
+    if (typeof result.payload === 'function') return Action.create(result.type, JSON.stringify(result))
+    else if (typeof result.payload === 'object')
+      return Action.create(result.type, JSON.stringify(seralizeFunctions(result.payload)))
+  }
+  return result
 }
 
 type ActionHandlerTestHelper = {
